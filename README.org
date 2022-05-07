@@ -1,0 +1,3 @@
+#+TITLE:BFL -- Infinitely Optimizable Brainfuck-to-Lisp Compiler
+
+This project follows the suit of [[https://github.com/phantomics/april][April, APL-to-Lisp compiler]], in compiling a non-Lisp language to Lisp with the goal of getting more interactive of a development workflow, better error inspection and possibly faster code (yet to be optimized and benchmarked).
