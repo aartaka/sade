@@ -36,7 +36,7 @@
                               (uiop:merge-pathnames* (third args) (uiop:getcwd))
                               in))))
                (uiop:with-temporary-file
-                   (:stream f :pathname p :type "lisp" :keep nil)
+                   (:stream f :pathname p :type "lisp" :keep t)
                  (format f "~s" (with-open-file (i in) (bf i)))
                  :close-stream
                  (compile-file p :output-file out))))
