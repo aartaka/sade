@@ -39,3 +39,21 @@
    name
    `(lambda ()
       ,(bf stream))))
+
+(defun bf-compile-from-file (name file)
+  (with-open-file (stream file)
+    (bf-compile name stream)))
+
+(defun bf-compile-from-string (name string)
+  (with-input-from-string (stream string)
+    (bf-compile name stream)))
+
+(defun bf-eval-file (file)
+  (let ((sym (gensym)))
+    (bf-compile-from-file sym file)
+    (funcall sym)))
+
+(defun bf-eval-string (string)
+  (let ((sym (gensym)))
+    (bf-compile-from-string sym string)
+    (funcall sym)))
