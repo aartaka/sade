@@ -83,6 +83,13 @@ fitting the machine word is fine, though.")
                                %cell-max%)
         (getc) 0))
 
+(defprimitive mult (offset multiplier)
+  (declare (type fixnum offset multiplier))
+  (setf (getco offset) (logand (the fixnum (+ (the fixnum (getco offset))
+                                              (the fixnum (* (the fixnum (getc)) multiplier))))
+                               %cell-max%)
+        (getc) 0))
+
 (defprimitive copy-from (offset)
   (setf (getc) (logand (the fixnum (+ (the fixnum (getco offset))
                                       (the fixnum (getc))))

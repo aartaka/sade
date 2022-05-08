@@ -60,20 +60,28 @@
   `((setc ,(+ y x))))
 
 (defoptimization copy-right
-    ((lop (right x) (plus 1) (left x) (minus 1)) **)
-  `((copy ,x)))
+    ((lop (right x) (plus y) (left x) (minus 1)) **)
+  (if (= y 1)
+      `((copy ,x))
+      `((mult ,x ,y))))
 
 (defoptimization copy-left
-    ((lop (left x) (plus 1) (right x) (minus 1)) **)
-  `((copy ,(- x))))
+    ((lop (left x) (plus y) (right x) (minus 1)) **)
+  (if (= y 1)
+      `((copy ,(- x)))
+      `((mult ,(- x) ,y))))
 
 (defoptimization copy-right-inverted
-    ((lop (minus 1) (right x) (plus 1) (left x)) **)
-  `((copy ,x)))
+    ((lop (minus 1) (right x) (plus y) (left x)) **)
+  (if (= y 1)
+      `((copy ,x))
+      `((mult ,x ,y))))
 
 (defoptimization copy-left-inverted
-    ((lop (minus 1) (left x) (plus 1) (right x)) **)
-  `((copy ,(- x))))
+    ((lop (minus 1) (left x) (plus y) (right x)) **)
+  (if (= y 1)
+      `((copy ,(- x)))
+      `((mult ,(- x) ,y))))
 
 (defoptimization copy-from-right
     ((left x) (copy x) (right x) **)
