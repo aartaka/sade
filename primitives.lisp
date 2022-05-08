@@ -2,11 +2,29 @@
 
 (in-package #:bfl)
 
-(declaim (type fixnum %memory-size% %cell-max% %ptr%)
+(declaim (type fixnum %address-size% %address-max% %cell-size% %cell-max% %ptr%)
          (type (simple-array fixnum) %memory%))
-(defvar %memory-size% 0)
-(defvar %memory% (make-array 0 :element-type 'fixnum :initial-element 0 ))
-(defvar %cell-max% 0)
+(defvar %address-size% 0
+  "The size of address space (and thus, memory), in bits.
+
+If it's 8, then memory only has 256 cells.
+If it's 16, then memory is 65536.")
+(defvar %address-max% 0
+  "The maximum address memory can have is usually (1- (expt 2 %address-size%)).")
+(defvar %memory% (make-array 0 :element-type 'fixnum :initial-element 0 )
+  "The memory array.
+
+Is typed as an array of fixnums, which, on 64-bit OSes should be
+enough for any Brainfuck magic, from 1-bit cells and 1-bit memory to
+64-bit cells and memory taking up all RAM.")
+(defvar %cell-size% 0
+  "The size of a cell in bits.
+
+The typical value for it is 8. 8 bits (or a range from 0 to 255) is a
+conventional basic Brainfuck cell size. Any other number of bits
+fitting the machine word is fine, though.")
+(defvar %cell-max% 0
+  "The maximum value a cell can get.")
 (defvar %ptr% 0)
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
