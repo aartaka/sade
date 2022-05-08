@@ -41,6 +41,7 @@ fitting the machine word is fine, though.")
        (declare (optimize (speed 3) (safety 0) (debug 0) (space 0) (compilation-speed 0)))
        ,@body)))
 
+(declaim (inline getc (setf getc) getco (setf getco)))
 (defun getc ()
   (declare (optimize (speed 3) (safety 0) (debug 0) (space 0) (compilation-speed 0)))
   (aref %memory% %ptr%))
