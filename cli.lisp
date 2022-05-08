@@ -50,7 +50,6 @@ Commands~13tArgs~25tDescription
 ~2th/help~25tprint this message.
 ~2tc/compile~13tin [out]~25tcompile IN into OUT.
 ~2tr/run~13tscript~25trun the compiled SCRIPT.
-~25t(if a source file is provided instead, the matching SCRIPT is compiled and ran.)
 ~2ti/input~25tstart an interactive BF console.
 
 Examples:
