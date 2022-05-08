@@ -95,6 +95,12 @@ fitting the machine word is fine, though.")
 (defprimitive printc ()
   (princ (code-char (getc))))
 
+(defprimitive scan-right ()
+  (setf %ptr% (position 0 %memory% :start %ptr%)))
+
+(defprimitive scan-left ()
+  (setf %ptr% (position 0 %memory% :end (1+ %ptr%) :from-end t)))
+
 (defmacro lop (&body body)
   `(loop
      (if (zerop (getc))
