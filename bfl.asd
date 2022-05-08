@@ -11,3 +11,11 @@
                (:file "match")
                (:file "optimizations")
                (:file "bfl")))
+
+(asdf:defsystem "bfl/cli"
+  :description "The CLI tool to compile and run bf files conveniently."
+  :depends-on (bfl)
+  :build-operation "program-op"
+  :build-pathname "bfl"
+  :entry-point "bfl::entry-point"
+  :components ((:file "cli")))
