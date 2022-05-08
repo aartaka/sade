@@ -60,11 +60,11 @@ fitting the machine word is fine, though.")
            (type fixnum offset value))
   (setf (aref %memory% (+ %ptr% offset)) value))
 
+(declaim (ftype (function (fixnum))
+                setc plus minus right left copy copy-from))
 (defprimitive setc (value)
   (setf (getc) value))
 
-(declaim (ftype (function (fixnum))
-                plus minus right left copy copy-from))
 (defprimitive plus (amount)
   (setf (getc) (the fixnum (logand (the fixnum (+ (the fixnum (getc)) amount))
                                    %cell-max%))))
