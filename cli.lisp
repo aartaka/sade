@@ -42,7 +42,9 @@
                  (compile-file p :output-file out))))
             ((or (null args)
                  (equalp '("h") args)
-                 (equalp '("help") args))
+                 (equalp '("-h") args)
+                 (equalp '("help") args)
+                 (equalp '("--help") args))
              (info "BFL, an extensible Brainfuck to Lisp compiler.
 
 Usage: bfl command [args]
