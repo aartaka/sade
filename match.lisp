@@ -2,8 +2,6 @@
 
 (in-package #:bfl)
 
-(defvar *matches* (make-hash-table))
-
 (defgeneric %match (spec data bindings)
   (:method (spec data bindings)
     nil))
