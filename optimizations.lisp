@@ -8,7 +8,7 @@
 
 (defmacro defoptimization (name match &body body)
   (pushnew (cons match name) *optimizations* :key #'car :test #'equalp)
-  `(defmacro ,name ()
+  `(defun ,name ()
      (maphash (lambda (var val) (setf (symbol-value var) val)) *bindings*)
      ,@body))
 
@@ -22,7 +22,7 @@
                     do (return (cons macro-name (multiple-value-list (match spec exprs)))))
         when name
           do (let* ((*bindings* bindings)
-                    (new-commands (macroexpand-1 `(,name)))
+                    (new-commands (funcall name))
                     (new-exprs (append new-commands (subseq exprs (1+ position)))))
                (setf (car exprs) (car new-exprs)
                      (cdr exprs) (cdr new-exprs)))
