@@ -4,7 +4,7 @@
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (defvar *optimizations* '())
-  (defvar *bindings* nil))
+  (defvar *bindings* (make-hash-table)))
 
 (defmacro defoptimization (name match &body body)
   (pushnew (cons match name) *optimizations* :key #'car :test #'equalp)
