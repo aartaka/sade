@@ -9,9 +9,7 @@
 (defmacro defoptimization (name match &body body)
   (pushnew (cons match name) *optimizations* :key #'car :test #'equalp)
   `(defmacro ,name ()
-     (loop for var being the hash-keys of *bindings*
-             using (hash-value val)
-           do (setf (symbol-value var) val))
+     (maphash (lambda (var val) (setf (symbol-value var) val)) *bindings*)
      ,@body))
 
 (defun optimize-body (body)
