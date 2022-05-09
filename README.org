@@ -1,3 +1,71 @@
 #+TITLE:BFL -- Infinitely Optimizable Brainfuck-to-Lisp Compiler
 
-This project follows the suit of [[https://github.com/phantomics/april][April, APL-to-Lisp compiler]], in compiling a non-Lisp language to Lisp with the goal of getting more interactive of a development workflow, better error inspection and possibly faster code (yet to be optimized and benchmarked).
+This project follows the suit of [[https://github.com/phantomics/april][April, APL-to-Lisp compiler]], in compiling a non-Lisp language to Lisp with the goal of getting more interactive of a development workflow, better error inspection and possibly faster code (yet to be optimized and benchmarked). Be not afraid of "Lisp" in the title -- it's all compilable to an executable binary, so that you don't have to worry about the Lisp compiler after you compiled it. 
+
+What it is not:
+- It's not the fastest Brainfuck compiler, but it can be. If you have an idea for an optimization, contribute a code snippet with your primitive and optimization in primitives.lisp and optimizations.lisp. The pattern is pretty simple. I can help you with the Lisp primitive side, if you don't feel confident enough in Lisp writing -- just open a PR with the optimization pattern and be clear about what you want to express :)
+- It's not yet the most configurable Brainfuck compiler, but it has all the potential to be one. Right now the cell size and memory length are configurable on the Lisp side, not on the CLI side. Give me some time and I'll abstract away all the commands and add a way to dynamically generate dialects, be it pbrain, abrainfuck, bf++, or whatever else you fancy. Feel free to open an issue with what you want the compiler options to be!
+- It's not yet the most CLI-usable compiler, but this can change. I've been quite lazy about CLI options parsing in cli.lisp on the prototype stage. However, it doesn't mean that the bulky API is there to stay. I'll be glad to accept any contribution improving on the status quo.
+
+* Getting Started
+The dependencies are extremely minimal -- a working Lisp compiler with a recent enough ASDF (most modern Lisp compilers have it). I've tested SBCL 2.2.2 and CCL 1.12.1, both worked just fine. Those (especially SBCL) should be easily available on your system, just search for it.
+
+To build BFL, simply do
+#+begin_src sh
+  make all
+#+end_src
+in the directory you cloned BFL to. If you use CCL instead of (implied) SBCL, add ~LISP=ccl~ in the end.
+
+You'll have the ~bfl~ executable right in this directory. You can use it as
+#+begin_src sh
+  ./bfl h # print help
+  ./bfl c assets/hello.bf ./hello # compile a Brainfuck file to an executable
+  ./bfl r hello # run the compiled file (it can have a strange extension)
+  # => Hello, World!
+#+end_src
+
+or install it with ~make install~.
+
+* How it Works
+BFL takes a Brainfuck input and produces Lisp code doing exactly what Brainfuck one does. The initial code is lengthy and slow. After that, this code goes through a set of optimizations (see optimizations.lisp) that turn recognized patterns (like the ones from [[http://calmerthanyouare.org/2015/01/07/optimizing-brainfuck.html][brainfuck optimization strategies by Mats Linander]]) into the simpler and faster Lisp code. This Lisp code is then compiled with the strongest typing and optimizations possible, resulting in quite fast final executables. Not the level of more sophisticated compilers or Assembly-level interpreters, but good enough, and recompiling BFL with new optimizations will allow you to produce even faster code!
+
+* Writing Optimizations
+It's mostly a matter of understanding the syntax of the match patterns. They are quite simple at the moment, so it shouldn't be hard.
+- Any match pattern is enclosed into a pair of parentheses.
+- The insides of the pattern are a sequence of arbitrarily nested primitives being one of:
+  - ~(plus NUMBER)~ -- equivalent to Brainfuck ~+~ command or a sequence of those, if NUMBER is more than 1.
+  - ~(minus NUMBER)~ -- equivalent to Brainfuck ~-~ command or a sequence of those, if NUMBER is more than 1.
+  - ~(left NUMBER)~ -- equivalent to Brainfuck ~<~ command or a sequence of those, if NUMBER is more than 1.
+  - ~(right NUMBER)~ -- equivalent to Brainfuck ~>~ command or a sequence of those, if NUMBER is more than 1.
+  - ~(readc)~ -- equivalent to Brainfuck ~,~.
+  - ~(printc)~ -- equivalent to Brainfuck ~,~.
+  - ~(lop FORMS)~ -- a Brainfuck loop. The FORMS inside it are an arbitrary sequence of other primitives, including ~lop~ too.
+- There are also primitives that have no singular command corresponding to the name, but rather a sequence of commands.
+  - ~(setc VALUE)~ -- sets the value of the cell to a certain value.
+  - ~(copy OFFSET)~ -- copies the current cell to OFFSET-th cell on the right (can be negative, in which case it copies to the left). The current cell is emptied after the copying. Brainfuck loop like ~[>+<-]~ is optimized to ~(copy 1)~, which runs much faster.
+  - ~(copy-from OFFSET)~ -- copies the contents of the OFFSET-th cell on the right (can be negative, in which case it copies from the left) to the current cell. Brainfuck sequence like ~<[>+<-]>~ is optimized to ~(copy-from -1)~, which runs much faster.
+  - ~(mult OFFSET MULTIPLIER)~ -- copies and multiplies the contents of the current cell to OFFSET-th cell to the right.
+  - ~(scan-left)~ -- equivalent to the ~[<]~ loop.
+  - ~(scan-right)~ -- equivalent to the ~[>]~ loop.
+- A Brainfuck code like ~++[>]<[>+<-]>.~ compiles to snippet like
+  - ~((plus 1) (plus 1) (lop (right 1)) (left 1) (lop (right 1) (plus 1) (left 1) (minus 1)) (right 1) (printc))~
+  - Or, when optimized with default optimizations, ~((plus 2) (scan-right) (left 1) (copy 1) (right 1) (printc))~
+- If you want something to match any possible value, use ~*~ symbol. ~(plus *)~ matches ~(plus 1)~ and ~(plus 5)~.
+- If you want to only watch the beginning of sequence, use ~**~ after it. For example, ~((plus 1) (minus 1) **)~ matches any sequence of primitives that starts with ~+-~, even if there's nothing else after it.
+
+Now, let is try an example. Suppose we want to optimize the absurd ~[+]~ loop. The purpose of this look is clearly zeroing the cell content, yet doing it the hard way -- through the cell value wrapping. Why not just set is to zero when we see the pattern? This code does it:
+#+begin_src lisp
+  (defoptimization zero-hard-way
+      ((lop (plus *)) **)
+    `((setc 0)))
+#+end_src
+
+The match pattern is saying "find a loop that only contains ~plus~ primitive, no matter how much, and take it from the surrounding code, no matter what the code is." If this pattern is matched, it's being replaced by the ~(setc 0)~. Note the grave accent before the ~setc~ expression -- the code after the match pattern is valid Lisp code, so you can do arbitrary Lisp computations there, given that you return the valid literal sequence of primitives afterwards. For example, copying loops and multiplication loops are being discerned like this:
+#+begin_src lisp
+  (defoptimization copy-right
+      ((lop (right x) (plus y) (left x) (minus 1)) **)
+    (if (= y 1)
+        `((copy ,x))
+        `((mult ,x ,y))))
+#+end_src
+In other words, "If the number that's being added to the destination cell is one, it's copying. Otherwise it's multiplication."
