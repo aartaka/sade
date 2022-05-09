@@ -13,13 +13,13 @@
      ,@body))
 
 (defun optimize-body (body)
-  (loop with new-body = (copy-tree body)
-        with exprs = new-body
+  (loop with exprs = body
         while exprs
         for (name position bindings)
-          = (loop for (spec . macro-name) in *optimizations*
+          = (loop for (spec . name) in *optimizations*
                   when (match spec exprs)
-                    do (return (cons macro-name (multiple-value-list (match spec exprs)))))
+                    do (return (cons name (multiple-value-list (match spec exprs))))
+                  finally (return nil))
         when name
           do (let* ((*bindings* bindings)
                     (new-commands (funcall name))
@@ -28,7 +28,7 @@
                      (cdr exprs) (cdr new-exprs)))
         else
           do (setf exprs (cdr exprs))
-        finally (return new-body)))
+        finally (return body)))
 
 (defvar x nil)
 (defvar y nil)
