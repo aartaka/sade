@@ -51,7 +51,7 @@ Commands~13tArgs~25tDescription
 ~2th/help~25tprint this message.
 ~2tc/compile~13tin [out]~25tcompile IN into OUT.
 ~2tr/run~13tscript~25trun the compiled SCRIPT.
-~2ti/input~25tstart an interactive BF console.
+~2ti/input~25tstart an interactive BF shell.
 
 Examples:
 # compile hello.bf to hello.XXX (format situation-dependent)
@@ -61,7 +61,11 @@ bfl c hello.bf
 # run the previously compiled hello.XXX
 bfl r hello.XXX
 # run the previously compiled hello.XXX inferring it from original file
-bfl r hello.bf ~%")))
+bfl r hello.bf ~%"))
+            (t (info "No such command found. Try
+bfl h
+
+to know the commands there are.~%")))
         (#+sbcl sb-sys:interactive-interrupt
          #+ccl  ccl:interrupt-signal-condition
          #+clisp system::simple-interrupt-condition
