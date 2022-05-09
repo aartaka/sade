@@ -21,10 +21,10 @@
                  finally (return commands)))))
 
 (defun bf (stream
-           ;; Memory size should be a power of 2 to enable the logand hack in primitives.lisp.
            &key (address-size 15)
              (cell-size 8))
   `(let* ((%address-size% ,address-size)
+          ;; Memory size should be a power of 2 to enable the logand hack in primitives.lisp.
           (%address-max% ,(1- (expt 2 address-size)))
           (%cell-size% ,cell-size)
           (%cell-max% ,(1- (expt 2 cell-size)))
