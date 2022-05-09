@@ -1,4 +1,4 @@
-#+TITLE:BFL -- Infinitely Optimizable Brainfuck-to-Lisp Compiler
+#+TITLE:Sade -- Infinitely Optimizable Brainfuck-to-Lisp Compiler
 
 This project follows the suit of [[https://github.com/phantomics/april][April, APL-to-Lisp compiler]], in compiling a non-Lisp language to Lisp with the goal of getting more interactive of a development workflow, better error inspection and possibly faster code (yet to be optimized and benchmarked). Be not afraid of "Lisp" in the title -- it's all compilable to an executable binary, so that you don't have to worry about the Lisp compiler after you compiled it. 
 
@@ -10,24 +10,24 @@ What it is not:
 * Getting Started
 The dependencies are extremely minimal -- a working Lisp compiler with a recent enough ASDF (most modern Lisp compilers have it). I've tested SBCL 2.2.2 and CCL 1.12.1, both worked just fine. Those (especially SBCL) should be easily available on your system, just search for it.
 
-To build BFL, simply do
+To build Sade, simply do
 #+begin_src sh
   make all
 #+end_src
-in the directory you cloned BFL to. If you use CCL instead of (implied) SBCL, add ~LISP=ccl~ in the end.
+in the directory you cloned Sade to. If you use CCL instead of (implied) SBCL, add ~LISP=ccl~ in the end.
 
-You'll have the ~bfl~ executable right in this directory. You can use it as
+You'll have the sade~~ executable right in this directory. You can use it as
 #+begin_src sh
-  ./bfl h # print help
-  ./bfl c assets/hello.bf ./hello # compile a Brainfuck file to an executable
-  ./bfl r hello # run the compiled file (it can have a strange extension)
+  ./sade h # print help
+  ./sade c assets/hello.bf ./hello # compile a Brainfuck file to an executable
+  ./sade r hello # run the compiled file (it can have a strange extension)
   # => Hello, World!
 #+end_src
 
 or install it with ~make install~.
 
 * How it Works
-BFL takes a Brainfuck input and produces Lisp code doing exactly what Brainfuck one does. The initial code is lengthy and slow. After that, this code goes through a set of optimizations (see optimizations.lisp) that turn recognized patterns (like the ones from [[http://calmerthanyouare.org/2015/01/07/optimizing-brainfuck.html][brainfuck optimization strategies by Mats Linander]]) into the simpler and faster Lisp code. This Lisp code is then compiled with the strongest typing and optimizations possible, resulting in quite fast final executables. Not the level of more sophisticated compilers or Assembly-level interpreters, but good enough, and recompiling BFL with new optimizations will allow you to produce even faster code!
+Sade takes a Brainfuck input and produces Lisp code doing exactly what Brainfuck one does. The initial code is lengthy and slow. After that, this code goes through a set of optimizations (see optimizations.lisp) that turn recognized patterns (like the ones from [[http://calmerthanyouare.org/2015/01/07/optimizing-brainfuck.html][brainfuck optimization strategies by Mats Linander]]) into the simpler and faster Lisp code. This Lisp code is then compiled with the strongest typing and optimizations possible, resulting in quite fast final executables. Not the level of more sophisticated compilers or Assembly-level interpreters, but good enough, and recompiling Sade with new optimizations will allow you to produce even faster code!
 
 * Writing Optimizations
 It's mostly a matter of understanding the syntax of the match patterns. They are quite simple at the moment, so it shouldn't be hard.

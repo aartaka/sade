@@ -1,6 +1,6 @@
-;;;; bfl.lisp
+;;;; sade.lisp
 
-(in-package #:bfl)
+(in-package #:sade)
 
 (defun process-commands (stream)
   (optimize-body

@@ -1,6 +1,6 @@
 ;;;; optimizations.lisp
 
-(in-package #:bfl)
+(in-package #:sade)
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (defvar *optimizations* '())

@@ -1,6 +1,6 @@
 ;;;; primitives.lisp
 
-(in-package #:bfl)
+(in-package #:sade)
 
 (declaim (type fixnum %address-size% %address-max% %cell-size% %cell-max% %ptr%)
          (type (simple-array fixnum) %memory%))

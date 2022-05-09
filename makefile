@@ -3,13 +3,13 @@ DESTDIR ?= /usr/bin
 
 .PHONY: all install clean
 
-all: bfl
+all: sade
 
 clean:
-	rm bfl
+	rm sade
 
-bfl:
-	$(LISP) --eval '(require "asdf")' --load bfl.asd --eval '(asdf:load-system :bfl)' --eval '(asdf:load-system :bfl/cli)' --eval '(asdf:make :bfl/cli)' --eval '(quit)'
+sade:
+	$(LISP) --eval '(require "asdf")' --load sade.asd --eval '(asdf:load-system :sade)' --eval '(asdf:load-system :sade/cli)' --eval '(asdf:make :sade/cli)' --eval '(quit)'
 
-install: bfl
-	cp bfl $(DESTDIR)/
+install: sade
+	cp sade $(DESTDIR)/

@@ -1,6 +1,6 @@
-;;;; bfl.asd
+;;;; sade.asd
 
-(asdf:defsystem #:bfl
+(asdf:defsystem #:sade
   :description "An infinitely optimizable Brainfuck-to-Lisp compiler."
   :author "Artyom Bologov"
   :license  "BSD 2-Clause"
@@ -10,12 +10,12 @@
                (:file "primitives")
                (:file "match")
                (:file "optimizations")
-               (:file "bfl")))
+               (:file "sade")))
 
-(asdf:defsystem "bfl/cli"
+(asdf:defsystem "sade/cli"
   :description "The CLI tool to compile and run bf files conveniently."
-  :depends-on (bfl)
+  :depends-on (sade)
   :build-operation "program-op"
-  :build-pathname "bfl"
-  :entry-point "bfl::entry-point"
+  :build-pathname "sade"
+  :entry-point "sade::entry-point"
   :components ((:file "cli")))

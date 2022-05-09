@@ -1,8 +1,6 @@
 ;;;; cli.lisp
 
-(in-package #:bfl)
-
-(defun func ())
+(in-package #:sade)
 
 (defun entry-point ()
   (flet ((info (control &rest args)
@@ -45,9 +43,9 @@
                  (equalp '("-h") args)
                  (equalp '("help") args)
                  (equalp '("--help") args))
-             (info "BFL, an extensible Brainfuck to Lisp compiler.
+             (info "Sade, an extensible Brainfuck to Lisp compiler.
 
-Usage: bfl command [args]
+Usage: sade command [args]
 
 Commands~13tArgs~25tDescription
 ~2th/help~25tprint this message.
@@ -57,15 +55,15 @@ Commands~13tArgs~25tDescription
 
 Examples:
 # compile hello.bf to hello.XXX (format situation-dependent)
-bfl c hello.bf hello
+sade c hello.bf hello
 # the same thing, yet shorter
-bfl c hello.bf
+sade c hello.bf
 # run the previously compiled hello.XXX
-bfl r hello.XXX
+sade r hello.XXX
 # run the previously compiled hello.XXX inferring it from original file
-bfl r hello.bf ~%"))
+sade r hello.bf ~%"))
             (t (info "No such command found. Try
-bfl h
+sade h
 
 to know the commands there are.~%")))
         (#+sbcl sb-sys:interactive-interrupt

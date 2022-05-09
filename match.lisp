@@ -1,6 +1,6 @@
 ;;;; match.lisp
 
-(in-package #:bfl)
+(in-package #:sade)
 
 (defgeneric %match (spec data bindings)
   (:method (spec data bindings)

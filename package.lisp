@@ -1,6 +1,6 @@
 ;;;; package.lisp
 
-(defpackage #:bfl
+(defpackage #:sade
   (:use #:cl)
   (:export #:bf #:bf-compile
            #:bf-compile-from-file #:bf-compile-from-string
