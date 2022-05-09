@@ -4,7 +4,7 @@
   :description "An infinitely optimizable Brainfuck-to-Lisp compiler."
   :author "Artyom Bologov"
   :license  "BSD 2-Clause"
-  :version "0.0.1"
+  :version "0.8.0"
   :serial t
   :components ((:file "package")
                (:file "primitives")
