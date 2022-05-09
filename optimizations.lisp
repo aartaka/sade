@@ -8,9 +8,11 @@
 
 (defmacro defoptimization (name match &body body)
   (pushnew (cons match name) *optimizations* :key #'car :test #'equalp)
-  `(defun ,name ()
-     (maphash (lambda (var val) (setf (symbol-value var) val)) *bindings*)
-     ,@body))
+  `(progn
+     (pushnew (cons (quote ,match) (quote ,name)) *optimizations* :key #'car :test #'equalp)
+     (defun ,name ()
+       (maphash (lambda (var val) (setf (symbol-value var) val)) *bindings*)
+       ,@body)))
 
 (defun optimize-body (body)
   (loop with exprs = body

@@ -36,6 +36,7 @@ fitting the machine word is fine, though.")
 (defmacro defprimitive (name (&rest args) &body body)
   (push name *primitives*)
   `(progn
+     (push (quote ,name) *primitives*)
      (declaim (inline ,name))
      (defun ,name (,@args)
        (declare (optimize (speed 3) (safety 0) (debug 0) (space 0) (compilation-speed 0)))
