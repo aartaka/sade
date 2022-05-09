@@ -30,6 +30,7 @@
           (%cell-max% ,(1- (expt 2 cell-size)))
           (%memory% (make-array ,(expt 2 address-size) :element-type 'fixnum :initial-element 0))
           (%ptr% 0))
+     (declare (optimize (speed 3) (safety 0) (debug 0) (space 0) (compilation-speed 0)))
      (progn
        ,@(process-commands stream))
      (values %ptr% %memory%)))
