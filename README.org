@@ -37,8 +37,8 @@ It's mostly a matter of understanding the syntax of the match patterns. They are
   - ~(minus NUMBER)~ -- equivalent to Brainfuck ~-~ command or a sequence of those, if NUMBER is more than 1.
   - ~(left NUMBER)~ -- equivalent to Brainfuck ~<~ command or a sequence of those, if NUMBER is more than 1.
   - ~(right NUMBER)~ -- equivalent to Brainfuck ~>~ command or a sequence of those, if NUMBER is more than 1.
-  - ~(readc)~ -- equivalent to Brainfuck ~,~.
-  - ~(printc)~ -- equivalent to Brainfuck ~,~.
+  - ~(readc)~ -- equivalent to Brainfuck ~,~ command.
+  - ~(printc)~ -- equivalent to Brainfuck ~.~ command.
   - ~(lop FORMS)~ -- a Brainfuck loop. The FORMS inside it are an arbitrary sequence of other primitives, including ~lop~ too.
 - There are also primitives that have no singular command corresponding to the name, but rather a sequence of commands.
   - ~(setc VALUE)~ -- sets the value of the cell to a certain value.
