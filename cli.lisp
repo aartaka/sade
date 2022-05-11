@@ -27,7 +27,7 @@
                      in (with-open-file (i in) (bf i)))
 
                (info "~%The optimized assembly for ~a is~%" in)
-               (let ((name (intern (string-upcase (pathname-name in)))))
+               (let ((name (gensym (string-upcase (pathname-name in)))))
                  (bf-compile-from-file name in)
                  (disassemble name))))
             ((and (= 2 argc) (memp (first args) '("r" "run")))
