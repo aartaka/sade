@@ -25,7 +25,12 @@
              (let ((in (uiop:merge-pathnames* (uiop:parse-native-namestring (second args))
                                               (uiop:getcwd))))
                (info "The optimized code for ~a is~%~a~%"
-                     in (with-open-file (i in) (bf i)))))
+                     in (with-open-file (i in) (bf i)))
+
+               (info "~%The optimized assembly for ~a is~%" in)
+               (let ((name (intern (string-upcase (pathname-name in)))))
+                 (bf-compile-from-file name in)
+                 (disassemble name))))
             ((and (= 2 (length args))
                   (or (equalp (first args) "r")
                       (equalp (first args) "run")))
