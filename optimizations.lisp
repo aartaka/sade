@@ -93,10 +93,10 @@
       `((copy-from ,(- x)))
       `((right ,x) (copy ,y) (left ,x))))
 
-(defoptimization scan-left-1
-    ((lop (left 1)) **)
-  `((scan-left)))
+(defoptimization scan-left-loop
+    ((lop (left x)) **)
+  `((scan-left ,x)))
 
-(defoptimization scan-right-1
-    ((lop (right 1)) **)
-  `((scan-right)))
+(defoptimization scan-right-loop
+    ((lop (right x)) **)
+  `((scan-right ,x)))

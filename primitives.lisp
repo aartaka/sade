@@ -62,7 +62,7 @@ fitting the machine word is fine, though.")
   (setf (aref %memory% (+ %ptr% offset)) value))
 
 (declaim (ftype (function (fixnum))
-                setc plus minus right left copy copy-from))
+                setc plus minus right left copy copy-from scan-right scan-left))
 (defprimitive setc (value)
   (setf (getc) value))
 
@@ -104,11 +104,29 @@ fitting the machine word is fine, though.")
 (defprimitive printc ()
   (princ (code-char (getc))))
 
-(defprimitive scan-right ()
-  (setf %ptr% (position 0 %memory% :start %ptr%)))
+(define-compiler-macro scan-right (offset)
+  (if (= 1 offset)
+      `(setf %ptr% (position 0 %memory% :start %ptr%))
+      `(loop for index from %ptr% by ,offset
+             when (zerop (aref %memory% index))
+               do (return (setf %ptr% index)))))
 
-(defprimitive scan-left ()
-  (setf %ptr% (position 0 %memory% :end (1+ %ptr%) :from-end t)))
+(defprimitive scan-right (offset)
+  (loop for index from %ptr% by offset
+        when (zerop (aref %memory% index))
+          do (return (setf %ptr% index))))
+
+(define-compiler-macro scan-left (offset)
+  (if (= 1 offset)
+      `(setf %ptr% (position 0 %memory% :end (1+ %ptr%) :from-end t))
+      `(loop for index from %ptr% downto 0 by ,offset
+             when (zerop (aref %memory% index))
+               do (return (setf %ptr% index)))))
+
+(defprimitive scan-left (offset)
+  (loop for index from %ptr% downto 0 by (- offset)
+        when (zerop (aref %memory% index))
+          do (return (setf %ptr% index))))
 
 (defmacro lop (&body body)
   `(loop
