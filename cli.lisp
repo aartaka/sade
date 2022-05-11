@@ -4,13 +4,14 @@
 
 (defun entry-point ()
   (flet ((info (control &rest args)
-           (apply #'format t control args)))
-    (let ((args uiop:*command-line-arguments*))
+           (apply #'format t control args))
+         (memp (item list)
+           (member item list :test #'equalp)))
+    (let* ((args uiop:*command-line-arguments*)
+           (argc (length args)))
       (handler-case
           (cond
-            ((and (= 1 (length args))
-                  (or (equalp (first args) "i")
-                      (equalp (first args) "input")))
+            ((and (= 1 argc) (memp (first args) '("i" "input")))
              (loop with collected = ""
                    while t
                    for input = (read-line)
@@ -19,9 +20,7 @@
                      and do (setf collected "")
                    else
                      do (setf collected (uiop:strcat collected input))))
-            ((and (= 2 (length args))
-                  (or (equalp (first args) "o")
-                      (equalp (first args) "optimize")))
+            ((and (= 2 argc) (memp (first args) '("o" "optimize")))
              (let ((in (uiop:merge-pathnames* (uiop:parse-native-namestring (second args))
                                               (uiop:getcwd))))
                (info "The optimized code for ~a is~%~a~%"
@@ -31,14 +30,9 @@
                (let ((name (intern (string-upcase (pathname-name in)))))
                  (bf-compile-from-file name in)
                  (disassemble name))))
-            ((and (= 2 (length args))
-                  (or (equalp (first args) "r")
-                      (equalp (first args) "run")))
+            ((and (= 2 argc) (memp (first args) '("r" "run")))
              (load (uiop:parse-native-namestring (second args))))
-            ((and (or (= 2 (length args))
-                      (= 3 (length args)))
-                  (or (equalp (first args) "c")
-                      (equalp (first args) "compile")))
+            ((and (<= 2 argc 3) (memp (first args) '("c" "compile")))
              (let* ((in (uiop:merge-pathnames* (uiop:parse-native-namestring (second args))
                                                (uiop:getcwd)))
                     (out (compile-file-pathname
@@ -50,11 +44,7 @@
                  (format f "~s" (with-open-file (i in) (bf i)))
                  :close-stream
                  (compile-file p :output-file out))))
-            ((or (null args)
-                 (equalp '("h") args)
-                 (equalp '("-h") args)
-                 (equalp '("help") args)
-                 (equalp '("--help") args))
+            ((or (zerop argc) (memp args '(("h") ("-h") ("help") ("--help"))))
              (info "Sade, an extensible Brainfuck to Lisp compiler.
 
 Usage: sade command [args]
