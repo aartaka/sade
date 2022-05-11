@@ -20,6 +20,13 @@
                    else
                      do (setf collected (uiop:strcat collected input))))
             ((and (= 2 (length args))
+                  (or (equalp (first args) "o")
+                      (equalp (first args) "optimize")))
+             (let ((in (uiop:merge-pathnames* (uiop:parse-native-namestring (second args))
+                                              (uiop:getcwd))))
+               (info "The optimized code for ~a is~%~a~%"
+                     in (with-open-file (i in) (bf i)))))
+            ((and (= 2 (length args))
                   (or (equalp (first args) "r")
                       (equalp (first args) "run")))
              (load (uiop:parse-native-namestring (second args))))
@@ -49,6 +56,7 @@ Usage: sade command [args]
 
 Commands~13tArgs~25tDescription
 ~2th/help~25tprint this message.
+~2to/optimize~13tin~25tshow the optimized code for IN.
 ~2tc/compile~13tin [out]~25tcompile IN into OUT.
 ~2tr/run~13tscript~25trun the compiled SCRIPT.
 ~2ti/input~25tstart an interactive BF shell.
