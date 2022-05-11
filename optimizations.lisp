@@ -100,3 +100,10 @@
 (defoptimization scan-right-loop
     ((lop (right x)) **)
   `((scan-right ,x)))
+
+;; TODO:
+;; - Substraction optimizations, for e.g. [<->-]
+;; - Shift loops, like [[<+>-]>]
+;; - Setting loops, like [[-]++>]
+;; - Reduction loops, like [->]
+;; - Complex copying/multiplication, like [>++>+<<-]
