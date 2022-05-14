@@ -6,6 +6,7 @@
   (defvar *optimizations* '())
   (defvar *bindings* (make-hash-table)))
 
+;; TODO: Use destructuring-bind for form matching.
 (defmacro defoptimization (name match &body body)
   (pushnew (cons match name) *optimizations* :key #'car :test #'equalp)
   `(progn
@@ -107,3 +108,4 @@
 ;; - Setting loops, like [[-]++>]
 ;; - Reduction loops, like [->]
 ;; - Complex copying/multiplication, like [>++>+<<-]
+;; - Optimizations of patterns from https://esolangs.org/wiki/Brainfuck_algorithms
