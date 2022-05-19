@@ -6,101 +6,133 @@
   (defvar *optimizations* '())
   (defvar *bindings* (make-hash-table)))
 
-;; TODO: Use destructuring-bind for form matching.
 (defmacro defoptimization (name match &body body)
-  (pushnew (cons match name) *optimizations* :key #'car :test #'equalp)
-  `(progn
-     (pushnew (cons (quote ,match) (quote ,name)) *optimizations* :key #'car :test #'equalp)
-     (defun ,name ()
-       (maphash (lambda (var val) (setf (symbol-value var) val)) *bindings*)
-       ,@body)))
+  (pushnew name *optimizations*)
+  (let ((arg-name (gensym)))
+    `(progn
+       (pushnew (quote ,name) *optimizations*)
+       (defun ,name (,arg-name)
+         (ignore-errors
+          (destructuring-bind
+            ,match ,arg-name
+            (values (progn ,@body) match?)))))))
 
 (defun optimize-body (body)
-  (loop with exprs = body
+  (loop for exprs = body then (rest exprs)
         while exprs
-        for (name position bindings)
-          = (loop for (spec . name) in *optimizations*
-                  when (match spec exprs)
-                    do (return (cons name (multiple-value-list (match spec exprs))))
-                  finally (return nil))
-        when name
-          do (let* ((*bindings* bindings)
-                    (new-commands (funcall name))
-                    (new-exprs (append new-commands (subseq exprs (1+ position)))))
-               (setf (car exprs) (car new-exprs)
-                     (cdr exprs) (cdr new-exprs)))
-        else
-          do (setf exprs (cdr exprs))
-        finally (return body)))
+        do (loop with optimizations = (reverse *optimizations*)
+                 for name = (pop optimizations)
+                 while name
+                 for (new-body match?) = (multiple-value-list (funcall name exprs))
+                 when (and match? (not (typep match? 'error)))
+                   do (setf exprs new-body
+                            optimizations (append optimizations (list name))))
+        collect (first exprs)))
 
-(defvar x nil)
-(defvar y nil)
-
-(defoptimization pluses
-    ((plus x) (plus y) **)
-  `((plus ,(+ x y))))
-
-(defoptimization minuses
-    ((minus x) (minus y) **)
-  `((minus ,(+ x y))))
-
-(defoptimization rights
-    ((right x) (right y) **)
-  `((right ,(+ x y))))
-
-(defoptimization lefts
-    ((left x) (left y) **)
-  `((left ,(+ x y))))
+(defoptimization duplicates
+    ((prim1 x) (prim2 y)
+               &rest forms
+               &aux (match?
+                     (and (eq prim1 prim2)
+                          (member prim1 '(plus minus left right)))))
+  `((,prim1 ,(+ x y)) ,@forms))
 
 (defoptimization empty
-    ((lop (minus *)) **)
-  `((setc 0)))
+    ((lop (minus x))
+     &rest forms
+     &aux (match? (and (eq 'lop lop)
+                       (eq 'minus minus))))
+  `((setc 0) ,@forms))
 
 (defoptimization init
-    ((setc y) (plus x) **)
-  `((setc ,(+ y x))))
+    ((setc y) (plus x)
+     &rest forms
+     &aux (match? (and (eq setc 'setc)
+                       (eq plus 'plus))))
+  `((setc ,(+ y x)) ,@forms))
 
 (defoptimization copy-right
-    ((lop (right x) (plus y) (left x) (minus 1)) **)
+    ((lop (right x) (plus y) (left x) (minus one))
+     &rest forms
+     &aux (match? (and (= one 1)
+                       (eq lop 'lop)
+                       (eq right 'right)
+                       (eq plus 'plus)
+                       (eq left 'left)
+                       (eq minus 'minus))))
   (if (= y 1)
-      `((copy ,x))
-      `((mult ,x ,y))))
+      `((copy ,x) ,@forms)
+      `((mult ,x ,y) ,@forms)))
 
 (defoptimization copy-left
-    ((lop (left x) (plus y) (right x) (minus 1)) **)
+    ((lop (left x) (plus y) (right x) (minus one))
+     &rest forms
+     &aux (match? (and (= one 1)
+                       (eq lop 'lop)
+                       (eq right 'right)
+                       (eq plus 'plus)
+                       (eq left 'left)
+                       (eq minus 'minus))))
   (if (= y 1)
-      `((copy ,(- x)))
-      `((mult ,(- x) ,y))))
+      `((copy ,(- x)) ,@forms)
+      `((mult ,(- x) ,y) ,@forms)))
 
 (defoptimization copy-right-inverted
-    ((lop (minus 1) (right x) (plus y) (left x)) **)
+    ((lop (minus one) (right x) (plus y) (left x))
+     &rest forms
+     &aux (match? (and (= one 1)
+                       (eq lop 'lop)
+                       (eq right 'right)
+                       (eq plus 'plus)
+                       (eq left 'left)
+                       (eq minus 'minus))))
   (if (= y 1)
-      `((copy ,x))
-      `((mult ,x ,y))))
+      `((copy ,x) ,@forms)
+      `((mult ,x ,y) ,@forms)))
 
 (defoptimization copy-left-inverted
-    ((lop (minus 1) (left x) (plus y) (right x)) **)
+    ((lop (minus one) (left x) (plus y) (right x))
+     &rest forms
+     &aux (match? (and (= one 1)
+                       (eq lop 'lop)
+                       (eq right 'right)
+                       (eq plus 'plus)
+                       (eq left 'left)
+                       (eq minus 'minus))))
   (if (= y 1)
-      `((copy ,(- x)))
-      `((mult ,(- x) ,y))))
+      `((copy ,(- x)) ,@forms)
+      `((mult ,(- x) ,y) ,@forms)))
 
 (defoptimization copy-from-right
-    ((left x) (copy x) (right x) **)
-  `((copy-from ,x)))
+    ((left x) (copy x) (right x)
+     &rest forms
+     &aux (match? (and (eq right 'right)
+                       (eq copy 'copy)
+                       (eq left 'left))))
+  `((copy-from ,x) ,@forms))
 
 (defoptimization copy-from-left
-    ((right x) (copy y) (left x) **)
-  (if (eq x (- y))
-      `((copy-from ,(- x)))
-      `((right ,x) (copy ,y) (left ,x))))
+    ((right x) (copy y) (left x)
+     &rest forms
+     &aux (match? (and (eq x (- y))
+                       (eq right 'right)
+                       (eq copy 'copy)
+                       (eq left 'left))))
+  `((copy-from ,(- x)) ,@forms))
 
 (defoptimization scan-left-loop
-    ((lop (left x)) **)
-  `((scan-left ,x)))
+    ((lop (left x))
+     &rest forms
+     &aux (match? (and (eq lop 'lop)
+                       (eq left 'left))))
+  `((scan-left ,x) ,@forms))
 
 (defoptimization scan-right-loop
-    ((lop (right x)) **)
-  `((scan-right ,x)))
+    ((lop (right x))
+     &rest forms
+     &aux (match? (and (eq lop 'lop)
+                       (eq right 'right))))
+  `((scan-right ,x) ,@forms))
 
 ;; TODO:
 ;; - Substraction optimizations, for e.g. [<->-]

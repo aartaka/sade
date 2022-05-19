@@ -30,42 +30,32 @@ or install it with ~make install~.
 Sade takes a Brainfuck input and produces Lisp code doing exactly what Brainfuck one does. The initial code is lengthy and slow. After that, this code goes through a set of optimizations (see optimizations.lisp) that turn recognized patterns (like the ones from [[http://calmerthanyouare.org/2015/01/07/optimizing-brainfuck.html][brainfuck optimization strategies by Mats Linander]]) into the simpler and faster Lisp code. This Lisp code is then compiled with the strongest typing and optimizations possible, resulting in quite fast final executables. Not the level of more sophisticated compilers or Assembly-level interpreters, but good enough, and recompiling Sade with new optimizations will allow you to produce even faster code!
 
 * Writing Optimizations
-It's mostly a matter of understanding the syntax of the match patterns. They are quite simple at the moment, so it shouldn't be hard.
-- Any match pattern is enclosed into a pair of parentheses.
-- The insides of the pattern are a sequence of arbitrarily nested primitives being one of:
-  - ~(plus NUMBER)~ -- equivalent to Brainfuck ~+~ command or a sequence of those, if NUMBER is more than 1.
-  - ~(minus NUMBER)~ -- equivalent to Brainfuck ~-~ command or a sequence of those, if NUMBER is more than 1.
-  - ~(left NUMBER)~ -- equivalent to Brainfuck ~<~ command or a sequence of those, if NUMBER is more than 1.
-  - ~(right NUMBER)~ -- equivalent to Brainfuck ~>~ command or a sequence of those, if NUMBER is more than 1.
-  - ~(readc)~ -- equivalent to Brainfuck ~,~ command.
-  - ~(printc)~ -- equivalent to Brainfuck ~.~ command.
-  - ~(lop FORMS)~ -- a Brainfuck loop. The FORMS inside it are an arbitrary sequence of other primitives, including ~lop~ too.
-- There are also primitives that have no singular command corresponding to the name, but rather a sequence of commands.
-  - ~(setc VALUE)~ -- sets the value of the cell to a certain value.
-  - ~(copy OFFSET)~ -- copies the current cell to OFFSET-th cell on the right (can be negative, in which case it copies to the left). The current cell is emptied after the copying. Brainfuck loop like ~[>+<-]~ is optimized to ~(copy 1)~, which runs much faster.
-  - ~(copy-from OFFSET)~ -- copies the contents of the OFFSET-th cell on the right (can be negative, in which case it copies from the left) to the current cell. Brainfuck sequence like ~<[>+<-]>~ is optimized to ~(copy-from -1)~, which runs much faster.
-  - ~(mult OFFSET MULTIPLIER)~ -- copies and multiplies the contents of the current cell to OFFSET-th cell to the right.
-  - ~(scan-left)~ -- equivalent to the ~[<]~ loop.
-  - ~(scan-right)~ -- equivalent to the ~[>]~ loop.
-- A Brainfuck code like ~++[>]<[>+<-]>.~ compiles to snippet like
-  - ~((plus 1) (plus 1) (lop (right 1)) (left 1) (lop (right 1) (plus 1) (left 1) (minus 1)) (right 1) (printc))~
-  - Or, when optimized with default optimizations, ~((plus 2) (scan-right) (left 1) (copy 1) (right 1) (printc))~
-- If you want something to match any possible value, use ~*~ symbol. ~(plus *)~ matches ~(plus 1)~ and ~(plus 5)~.
-- If you want to only watch the beginning of sequence, use ~**~ after it. For example, ~((plus 1) (minus 1) **)~ matches any sequence of primitives that starts with ~+-~, even if there's nothing else after it.
+It's mostly a matter of understanding the syntax of [[https://lispcookbook.github.io/cl-cookbook/data-structures.html#destructuring-bind-parameter-list][~destructuring-bind~]] and having an ~&aux~ binding for the ~match?~ variable.
 
-Now, let is try an example. Suppose we want to optimize the absurd ~[+]~ loop. The purpose of this look is clearly zeroing the cell content, yet doing it the hard way -- through the cell value wrapping. Why not just set is to zero when we see the pattern? This code does it:
+Let us try an example. Suppose we want to optimize the absurd ~[+]~ loop. The purpose of this look is clearly zeroing the cell content, yet doing it the hard way -- through the cell value wrapping. Why not just set is to zero when we see the pattern? This code does it:
 #+begin_src lisp
   (defoptimization zero-hard-way
-      ((lop (plus *)) **)
-    `((setc 0)))
+    ((lop (plus x))
+     &rest forms
+     &aux (match?
+           (and (eq plus 'plus)
+                (eq lop 'lop))))
+    `((setc 0) ,@forms))
 #+end_src
 
 The match pattern is saying "find a loop that only contains ~plus~ primitive, no matter how much, and take it from the surrounding code, no matter what the code is." If this pattern is matched, it's being replaced by the ~(setc 0)~. Note the grave accent before the ~setc~ expression -- the code after the match pattern is valid Lisp code, so you can do arbitrary Lisp computations there, given that you return the valid literal sequence of primitives afterwards. For example, copying loops and multiplication loops are being discerned like this:
 #+begin_src lisp
   (defoptimization copy-right
-      ((lop (right x) (plus y) (left x) (minus 1)) **)
+    ((lop (right x) (plus y) (left x) (minus one))
+     &rest forms
+     &aux (match? (and (= one 1)
+                       (eq lop 'lop)
+                       (eq right 'right)
+                       (eq plus 'plus)
+                       (eq left 'left)
+                       (eq minus 'minus))))
     (if (= y 1)
-        `((copy ,x))
-        `((mult ,x ,y))))
+        `((copy ,x) ,@forms)
+        `((mult ,x ,y) ,@forms)))
 #+end_src
 In other words, "If the number that's being added to the destination cell is one, it's copying. Otherwise it's multiplication."
