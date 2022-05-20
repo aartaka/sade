@@ -10,7 +10,6 @@
   :build-pathname "sade"
   :entry-point "sade::entry-point"
   :components ((:file "package")
-               (:file "primitives")
                (:file "match")
                (:file "optimizations")
                (:file "sade")

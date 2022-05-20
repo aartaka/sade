@@ -20,20 +20,112 @@
                    into commands
                  finally (return commands)))))
 
+(defmacro lop (&body body)
+  `(loop
+     (if (zerop (getc))
+         (return)
+         (progn ,@body))))
+
 (defun bf (stream
            &key (address-size 15)
-             (cell-size 8))
-  `(let* ((%address-size% ,address-size)
-          ;; Memory size should be a power of 2 to enable the logand hack in primitives.lisp.
-          (%address-max% ,(1- (expt 2 address-size)))
-          (%cell-size% ,cell-size)
-          (%cell-max% ,(1- (expt 2 cell-size)))
-          (%memory% (make-array ,(expt 2 address-size) :element-type 'fixnum :initial-element 0))
-          (%ptr% 0))
-     (declare (optimize (speed 3) (safety 0) (debug 0) (space 0) (compilation-speed 0)))
-     (progn
-       ,@(process-commands stream))
-     (values %ptr% %memory%)))
+             (cell-size 8)
+             (declarations '(declare (optimize (speed 3) (safety 0) (debug 0) (space 0) (compilation-speed 0)))))
+  (let ((type `(unsigned-byte ,cell-size))
+        (cell-max (1- (expt 2 cell-size)))
+        (address-max (1- (expt 2 address-size))))
+    `(let* ((*memory* (make-array ,(expt 2 address-size) :element-type (quote ,type) :initial-element 0))
+            (*ptr* 0))
+       (declare (type (integer 0 ,address-max) *ptr*)
+                (type (simple-array ,type) *memory*))
+       (labels ((getc ()
+                  ,declarations
+                  (the ,type (aref *memory* *ptr*)))
+                ((setf getc) (value)
+                  ,declarations
+                  (declare (type ,type value))
+                  (setf (aref *memory* *ptr*) value))
+                (getco (offset)
+                  ,declarations
+                  (declare (type fixnum offset))
+                  (the ,type (aref *memory* (+ *ptr* offset))))
+                ((setf getco) (value offset)
+                  ,declarations
+                  (declare (type fixnum offset)
+                           (type ,type value))
+                  (setf (aref *memory* (+ *ptr* offset)) value))
+                (setc (value)
+                  ,declarations
+                  (declare (type ,type value))
+                  (setf (getc) value))
+                (plus (amount)
+                  ,declarations
+                  (declare (type ,type amount))
+                  (setf (getc)
+                        (the ,type (logand (the ,type (+ (the ,type (getc)) (the ,type amount)))
+                                           ,cell-max))))
+                (minus (amount)
+                  ,declarations
+                  (declare (type ,type amount))
+                  (setf (getc)
+                        (logand (the ,type (- (the ,type (getc)) (the ,type amount)))
+                                ,cell-max)))
+                (right (amount)
+                  ,declarations
+                  (declare (type fixnum amount))
+                  (setf *ptr* (logand (the ,type (+ *ptr* (the ,type amount))) ,address-max)))
+                (left (amount)
+                  ,declarations
+                  (declare (type fixnum amount))
+                  (setf *ptr* (logand (the ,type (- *ptr* (the ,type amount))) ,address-max)))
+                (readc ()
+                  (setf (getc) (the ,type (char-code (read-char)))))
+                (printc ()
+                  (princ (code-char (the ,type (getc)))))
+                (copy (offset)
+                  ,declarations
+                  (declare (type fixnum offset))
+                  (setf (getco offset) (logand (the ,type (+ (the ,type (getco offset))
+                                                             (the ,type (getc))))
+                                               ,cell-max)
+                        (getc) 0))
+                (mult (offset multiplier)
+                  ,declarations
+                  (declare (type fixnum offset)
+                           (type ,type multiplier))
+                  (setf (getco offset) (logand (the ,type (+ (the ,type (getco offset))
+                                                             (the ,type (* (the ,type (getc)) multiplier))))
+                                               ,cell-max)
+                        (getc) 0))
+                (copy-from (offset)
+                  ,declarations
+                  (declare (type fixnum offset))
+                  (setf (getc) (logand (the ,type (+ (the ,type (getco offset))
+                                                     (the ,type (getc))))
+                                       ,cell-max)
+                        (getco offset) 0))
+                (scan-right (offset)
+                  ,declarations
+                  (declare (type fixnum offset))
+                  (loop for index from *ptr* by offset
+                        when (zerop (aref *memory* index))
+                          do (return (setf *ptr* index))))
+                (scan-left (offset)
+                  ,declarations
+                  (declare (type fixnum offset))
+                  (loop for index from *ptr* downto 0 by offset
+                        when (zerop (aref *memory* index))
+                          do (return (setf *ptr* index)))))
+         (declare (optimize (speed 3) (safety 0) (debug 0) (space 0) (compilation-speed 0))
+                  (ftype (function () ,type) getc)
+                  (ftype (function (,type)) (setf getc))
+                  (ftype (function (fixnum) ,type) getco)
+                  (ftype (function (,type fixnum)) (setf getco))
+                  (ftype (function (fixnum)) left right copy copy-from scan-left scan-right)
+                  (ftype (function (,type)) setc plus minus)
+                  (ftype (function (fixnum ,type)) mult))
+         (progn
+           ,@(process-commands stream))
+         (values *ptr* *memory*)))))
 
 (defun bf-compile (name stream)
   (compile
