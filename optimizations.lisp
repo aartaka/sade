@@ -6,6 +6,12 @@
   (defvar *optimizations* '())
   (defvar *bindings* (make-hash-table)))
 
+(defun eq* (&rest pairs)
+  (if (>= (length pairs) 2)
+      (and (eq (first pairs) (second pairs))
+           (apply #'eq* (cddr pairs)))
+      (zerop (length pairs))))
+
 (defmacro defoptimization (name match &body body)
   (pushnew name *optimizations*)
   (let ((arg-name (gensym)))
@@ -47,19 +53,19 @@
 (defoptimization init
     ((setc y) (plus x)
      &rest forms
-     &aux (match? (and (eq setc 'setc)
-                       (eq plus 'plus))))
+              &aux (match? (eq* setc 'setc
+                                plus 'plus)))
   `((setc ,(+ y x)) ,@forms))
 
 (defoptimization copy-right
     ((lop (right x) (plus y) (left x) (minus one))
      &rest forms
-     &aux (match? (and (= one 1)
-                       (eq lop 'lop)
-                       (eq right 'right)
-                       (eq plus 'plus)
-                       (eq left 'left)
-                       (eq minus 'minus))))
+     &aux (match? (eq* one 1
+                       lop 'lop
+                       plus 'plus
+                       right 'right
+                       left 'left
+                       minus 'minus)))
   (if (= y 1)
       `((copy ,x) ,@forms)
       `((mult ,x ,y) ,@forms)))
@@ -67,12 +73,12 @@
 (defoptimization copy-left
     ((lop (left x) (plus y) (right x) (minus one))
      &rest forms
-     &aux (match? (and (= one 1)
-                       (eq lop 'lop)
-                       (eq right 'right)
-                       (eq plus 'plus)
-                       (eq left 'left)
-                       (eq minus 'minus))))
+     &aux (match? (eq* one 1
+                       lop 'lop
+                       plus 'plus
+                       right 'right
+                       left 'left
+                       minus 'minus)))
   (if (= y 1)
       `((copy ,(- x)) ,@forms)
       `((mult ,(- x) ,y) ,@forms)))
@@ -80,12 +86,12 @@
 (defoptimization copy-right-inverted
     ((lop (minus one) (right x) (plus y) (left x))
      &rest forms
-     &aux (match? (and (= one 1)
-                       (eq lop 'lop)
-                       (eq right 'right)
-                       (eq plus 'plus)
-                       (eq left 'left)
-                       (eq minus 'minus))))
+     &aux (match? (eq* one 1
+                       lop 'lop
+                       plus 'plus
+                       right 'right
+                       left 'left
+                       minus 'minus)))
   (if (= y 1)
       `((copy ,x) ,@forms)
       `((mult ,x ,y) ,@forms)))
@@ -93,12 +99,12 @@
 (defoptimization copy-left-inverted
     ((lop (minus one) (left x) (plus y) (right x))
      &rest forms
-     &aux (match? (and (= one 1)
-                       (eq lop 'lop)
-                       (eq right 'right)
-                       (eq plus 'plus)
-                       (eq left 'left)
-                       (eq minus 'minus))))
+     &aux (match? (eq* one 1
+                       lop 'lop
+                       plus 'plus
+                       right 'right
+                       left 'left
+                       minus 'minus)))
   (if (= y 1)
       `((copy ,(- x)) ,@forms)
       `((mult ,(- x) ,y) ,@forms)))
