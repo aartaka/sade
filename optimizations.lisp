@@ -3,8 +3,7 @@
 (in-package #:sade)
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
-  (defvar *optimizations* '())
-  (defvar *bindings* (make-hash-table)))
+  (defvar *optimizations* '()))
 
 (defun eq* (&rest pairs)
   (if (>= (length pairs) 2)
