@@ -41,7 +41,7 @@
                               in))))
                (uiop:with-temporary-file
                    (:stream f :pathname p :type "lisp" :keep t)
-                 (format f "~s" (with-open-file (i in) (bf i)))
+                 (print (with-open-file (i in) (bf i)) f)
                  :close-stream
                  (compile-file p :output-file out))))
             ((or (zerop argc) (memp args '(("h") ("-h") ("help") ("--help"))))
