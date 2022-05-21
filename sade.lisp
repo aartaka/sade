@@ -35,6 +35,7 @@
         (address-max (1- (expt 2 address-size))))
     `(let* ((*memory* (make-array ,(expt 2 address-size) :element-type (quote ,type) :initial-element 0))
             (*ptr* 0))
+       ,declarations
        (declare (type (integer 0 ,address-max) *ptr*)
                 (type (simple-array ,type) *memory*))
        (labels (,@(loop for name being the hash-key of *primitives*
@@ -45,7 +46,6 @@
                                                   (subst cell-max '%cell-max%
                                                          (subst type '%type%
                                                                 (primitive-body primitive))))))))
-         ,declarations
          (declare (inline ,@(loop for name being the hash-key of *primitives* collect name)))
          (progn ,@(process-commands stream))
          (values *ptr* *memory*)))))
