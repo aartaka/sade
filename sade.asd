@@ -12,5 +12,6 @@
   :components ((:file "package")
                (:file "match")
                (:file "optimizations")
+               (:file "primitives")
                (:file "sade")
                (:file "cli")))

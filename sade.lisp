@@ -37,90 +37,17 @@
             (*ptr* 0))
        (declare (type (integer 0 ,address-max) *ptr*)
                 (type (simple-array ,type) *memory*))
-       (labels ((getc ()
-                  ,declarations
-                  (the ,type (aref *memory* *ptr*)))
-                ((setf getc) (value)
-                  ,declarations
-                  (declare (type ,type value))
-                  (setf (aref *memory* *ptr*) value))
-                (getco (offset)
-                  ,declarations
-                  (declare (type fixnum offset))
-                  (the ,type (aref *memory* (+ *ptr* offset))))
-                ((setf getco) (value offset)
-                  ,declarations
-                  (declare (type fixnum offset)
-                           (type ,type value))
-                  (setf (aref *memory* (+ *ptr* offset)) value))
-                (setc (value)
-                  ,declarations
-                  (declare (type ,type value))
-                  (setf (getc) value))
-                (plus (amount)
-                  ,declarations
-                  (declare (type ,type amount))
-                  (setf (getc)
-                        (the ,type (logand (the ,type (+ (the ,type (getc)) (the ,type amount)))
-                                           ,cell-max))))
-                (minus (amount)
-                  ,declarations
-                  (declare (type ,type amount))
-                  (setf (getc)
-                        (logand (the ,type (- (the ,type (getc)) (the ,type amount)))
-                                ,cell-max)))
-                (right (amount)
-                  ,declarations
-                  (declare (type fixnum amount))
-                  (setf *ptr* (logand (the ,type (+ *ptr* (the ,type amount))) ,address-max)))
-                (left (amount)
-                  ,declarations
-                  (declare (type fixnum amount))
-                  (setf *ptr* (logand (the ,type (- *ptr* (the ,type amount))) ,address-max)))
-                (readc ()
-                  (setf (getc) (the ,type (char-code (read-char)))))
-                (printc ()
-                  (princ (code-char (the ,type (getc)))))
-                (copy (offset)
-                  ,declarations
-                  (declare (type fixnum offset))
-                  (setf (getco offset) (logand (the ,type (+ (the ,type (getco offset))
-                                                             (the ,type (getc))))
-                                               ,cell-max)
-                        (getc) 0))
-                (mult (offset multiplier)
-                  ,declarations
-                  (declare (type fixnum offset)
-                           (type ,type multiplier))
-                  (setf (getco offset) (logand (the ,type (+ (the ,type (getco offset))
-                                                             (the ,type (* (the ,type (getc)) multiplier))))
-                                               ,cell-max)
-                        (getc) 0))
-                (copy-from (offset)
-                  ,declarations
-                  (declare (type fixnum offset))
-                  (setf (getc) (logand (the ,type (+ (the ,type (getco offset))
-                                                     (the ,type (getc))))
-                                       ,cell-max)
-                        (getco offset) 0))
-                (scan-right (offset)
-                  ,declarations
-                  (declare (type fixnum offset))
-                  (loop for index from *ptr* by offset
-                        when (zerop (aref *memory* index))
-                          do (return (setf *ptr* index))))
-                (scan-left (offset)
-                  ,declarations
-                  (declare (type fixnum offset))
-                  (loop for index from *ptr* downto 0 by offset
-                        when (zerop (aref *memory* index))
-                          do (return (setf *ptr* index)))))
-         (declare (optimize (speed 3) (safety 0) (debug 0) (space 0) (compilation-speed 0))
-                  (inline getc (setf getc) getco (setf getco) setc
-                          plus minus left right
-                          copy copy-from mult scan-left scan-right))
-         (progn
-           ,@(process-commands stream))
+       (labels (,@(loop for name being the hash-key of *primitives*
+                          using (hash-value primitive)
+                        collect `(,(primitive-name primitive) (,@(primitive-args primitive))
+                                  ,@(subst declarations `%declarations%
+                                           (subst address-max '%address-max%
+                                                  (subst cell-max '%cell-max%
+                                                         (subst type '%type%
+                                                                (primitive-body primitive))))))))
+         ,declarations
+         (declare (inline ,@(loop for name being the hash-key of *primitives* collect name)))
+         (progn ,@(process-commands stream))
          (values *ptr* *memory*)))))
 
 (defun bf-compile (name stream)
