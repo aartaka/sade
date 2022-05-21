@@ -118,14 +118,7 @@
          (declare (optimize (speed 3) (safety 0) (debug 0) (space 0) (compilation-speed 0))
                   (inline getc (setf getc) getco (setf getco) setc
                           plus minus left right
-                          copy copy-from mult scan-left scan-right)
-                  (ftype (function () ,type) getc)
-                  (ftype (function (,type)) (setf getc))
-                  (ftype (function (fixnum) ,type) getco)
-                  (ftype (function (,type fixnum)) (setf getco))
-                  (ftype (function (fixnum)) left right copy copy-from scan-left scan-right)
-                  (ftype (function (,type)) setc plus minus)
-                  (ftype (function (fixnum ,type)) mult))
+                          copy copy-from mult scan-left scan-right))
          (progn
            ,@(process-commands stream))
          (values *ptr* *memory*)))))
