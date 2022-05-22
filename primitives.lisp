@@ -24,19 +24,19 @@
 
 (defprimitive (getc) ()
   %declarations%
-  (the %type% (aref *memory* *ptr*)))
+  (the %type% (aref %memory% %ptr%)))
 
 (defprimitive ((setf getc)) (value)
   %declarations%
-  (setf (aref *memory* *ptr*) (the %type% value)))
+  (setf (aref %memory% %ptr%) (the %type% value)))
 
 (defprimitive (getco) (offset)
   %declarations%
-  (the %type% (aref *memory* (+ *ptr* (the fixnum offset)))))
+  (the %type% (aref %memory% (+ %ptr% (the fixnum offset)))))
 
 (defprimitive ((setf getco)) (value offset)
   %declarations%
-  (setf (aref *memory* (+ *ptr* (the fixnum offset))) (the %type% value)))
+  (setf (aref %memory% (+ %ptr% (the fixnum offset))) (the %type% value)))
 
 (defprimitive (setc) (value)
   %declarations%
@@ -56,11 +56,11 @@
 
 (defprimitive (right #\>) (amount)
   %declarations%
-  (setf *ptr* (logand (the fixnum (+ *ptr* (the fixnum amount))) %address-max%)))
+  (setf %ptr% (logand (the fixnum (+ %ptr% (the fixnum amount))) %address-max%)))
 
 (defprimitive (left #\<) (amount)
   %declarations%
-  (setf *ptr* (logand (the fixnum (- *ptr* (the fixnum amount))) %address-max%)))
+  (setf %ptr% (logand (the fixnum (- %ptr% (the fixnum amount))) %address-max%)))
 
 (defprimitive (readc #\,) ()
   (setf (getc) (the %type% (char-code (read-char)))))
@@ -91,12 +91,12 @@
 
 (defprimitive (scan-right) (offset)
   %declarations%
-  (loop for index from *ptr* by (the fixnum offset)
-        when (zerop (aref *memory* index))
-          do (return (setf *ptr* index))))
+  (loop for index from %ptr% by (the fixnum offset)
+        when (zerop (aref %memory% index))
+          do (return (setf %ptr% index))))
 
 (defprimitive (scan-left) (offset)
   %declarations%
-  (loop for index from *ptr* downto 0 by (the fixnum offset)
-        when (zerop (aref *memory* index))
-          do (return (setf *ptr* index))))
+  (loop for index from %ptr% downto 0 by (the fixnum offset)
+        when (zerop (aref %memory% index))
+          do (return (setf %ptr% index))))
