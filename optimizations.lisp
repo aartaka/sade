@@ -5,12 +5,6 @@
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (defvar *optimizations* '()))
 
-(defun eq* (&rest pairs)
-  (if (>= (length pairs) 2)
-      (and (eq (first pairs) (second pairs))
-           (apply #'eq* (cddr pairs)))
-      (zerop (length pairs))))
-
 (defmacro defoptimization (name match &body body)
   (pushnew name *optimizations*)
   (let ((arg-name (gensym)))
@@ -36,107 +30,96 @@
 
 (defoptimization duplicates
     ((prim1 x) (prim2 y)
-               &rest forms
-               &aux (match?
-                     (and (eq prim1 prim2)
-                          (member prim1 '(plus minus left right)))))
+     &rest forms
+     &aux (match?
+           (and (eq prim1 prim2)
+                (member prim1 '(plus minus left right)))))
   `((,prim1 ,(+ x y)) ,@forms))
 
 (defoptimization empty
     ((lop (minus x))
      &rest forms
-     &aux (match? (and (eq 'lop lop)
-                       (eq 'minus minus))))
+     &aux (match? (and (equalp (list lop minus)
+                               '(lop minus))
+                       (numberp x))))
   `((setc 0) ,@forms))
 
 (defoptimization init
     ((setc y) (plus x)
      &rest forms
-              &aux (match? (eq* setc 'setc
-                                plus 'plus)))
+     &aux (match? (equalp (list setc plus)
+                          '(setc plus))))
   `((setc ,(+ y x)) ,@forms))
 
 (defoptimization copy-right
-    ((lop (right x) (plus y) (left x) (minus one))
+    ((lop (right x1) (plus y) (left x2) (minus one))
      &rest forms
-     &aux (match? (eq* one 1
-                       lop 'lop
-                       plus 'plus
-                       right 'right
-                       left 'left
-                       minus 'minus)))
+     &aux (match? (and (equalp (list lop right plus left minus one)
+                               '(lop right plus left minus 1))
+                       (= x1 x2))))
   (if (= y 1)
-      `((copy ,x) ,@forms)
-      `((mult ,x ,y) ,@forms)))
+      `((copy ,x1) ,@forms)
+      `((mult ,x1 ,y) ,@forms)))
 
 (defoptimization copy-left
-    ((lop (left x) (plus y) (right x) (minus one))
+    ((lop (left x1) (plus y) (right x2) (minus one))
      &rest forms
-     &aux (match? (eq* one 1
-                       lop 'lop
-                       plus 'plus
-                       right 'right
-                       left 'left
-                       minus 'minus)))
+     &aux (match? (and (equalp (list lop left plus right minus one)
+                               '(lop left plus right minus 1))
+                       (= x1 x2))))
   (if (= y 1)
-      `((copy ,(- x)) ,@forms)
-      `((mult ,(- x) ,y) ,@forms)))
+      `((copy ,(- x1)) ,@forms)
+      `((mult ,(- x1) ,y) ,@forms)))
 
 (defoptimization copy-right-inverted
-    ((lop (minus one) (right x) (plus y) (left x))
+    ((lop (minus one) (right x1) (plus y) (left x2))
      &rest forms
-     &aux (match? (eq* one 1
-                       lop 'lop
-                       plus 'plus
-                       right 'right
-                       left 'left
-                       minus 'minus)))
+     &aux (match? (and (equalp (list one lop minus right plus left)
+                               '(1 lop minus right plus left))
+                       (= x1 x2))))
   (if (= y 1)
-      `((copy ,x) ,@forms)
-      `((mult ,x ,y) ,@forms)))
+      `((copy ,x1) ,@forms)
+      `((mult ,x1 ,y) ,@forms)))
 
 (defoptimization copy-left-inverted
-    ((lop (minus one) (left x) (plus y) (right x))
+    ((lop (minus one) (left x1) (plus y) (right x2))
      &rest forms
-     &aux (match? (eq* one 1
-                       lop 'lop
-                       plus 'plus
-                       right 'right
-                       left 'left
-                       minus 'minus)))
+     &aux (match? (and (equalp (list lop minus one left plus right)
+                               '(lop minus 1 left plus right))
+                       (= x1 x2))))
   (if (= y 1)
-      `((copy ,(- x)) ,@forms)
-      `((mult ,(- x) ,y) ,@forms)))
+      `((copy ,(- x1)) ,@forms)
+      `((mult ,(- x1) ,y) ,@forms)))
 
 (defoptimization copy-from-right
-    ((left x) (copy x) (right x)
+    ((left x1) (copy x2) (right x3)
      &rest forms
-     &aux (match? (and (eq right 'right)
-                       (eq copy 'copy)
-                       (eq left 'left))))
-  `((copy-from ,x) ,@forms))
+     &aux (match? (and (equalp (list right copy left)
+                               '(right copy left))
+                       (= x1 x2 x3))))
+  `((copy-from ,x1) ,@forms))
 
 (defoptimization copy-from-left
-    ((right x) (copy y) (left x)
+    ((right x1) (copy y) (left x2)
      &rest forms
-     &aux (match? (and (eq x (- y))
-                       (eq right 'right)
-                       (eq copy 'copy)
-                       (eq left 'left))))
-  `((copy-from ,(- x)) ,@forms))
+     &aux (match? (and (equalp (list right copy left)
+                               '(right copy left))
+                       (= x1 x2)
+                       (eq x1 (- y)))))
+  `((copy-from ,(- x1)) ,@forms))
 
 (defoptimization scan-left-loop
     ((lop (left x))
      &rest forms
-     &aux (match? (and (eq lop 'lop)
-                       (eq left 'left))))
+     &aux (match? (equalp (list lop left)
+                          '(lop left))))
   `((scan-left ,x) ,@forms))
 
 (defoptimization scan-right-loop
     ((lop (right x))
      &rest forms
-     &aux (match? (and (eq lop 'lop)
-                       (eq right 'right))))
+     &aux (match? (equalp (list lop right)
+                          '(lop right))))
   `((scan-right ,x) ,@forms))
 
 ;; TODO:
