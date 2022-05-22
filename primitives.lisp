@@ -13,14 +13,14 @@
   (body '() :type list))
 
 (defmacro defprimitive ((name &optional char) (&rest args) &body body)
-  (let ((primitive `(setf (gethash (quote ,name) *primitives*)
-                          (make-primitive :char ,char
-                                          :name (quote ,name)
-                                          :args (quote ,args)
-                                          :body (quote ,body)))))
-    (if char
-        `(setf (gethash ,char *commands*) ,primitive)
-        primitive)))
+  `(let ((primitive (make-primitive :char ,char
+                                    :name (quote ,name)
+                                    :args (quote ,args)
+                                    :body (quote ,body))))
+     (setf (gethash (quote ,name) *primitives*) primitive)
+     ,(when char
+        `(setf (gethash ,char *commands*) primitive))
+     primitive))
 
 (defprimitive (getc) ()
   %declarations%
