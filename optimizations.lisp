@@ -11,10 +11,11 @@
     `(progn
        (pushnew (quote ,name) *optimizations*)
        (defun ,name (,arg-name)
-         (ignore-errors
-          (destructuring-bind
-            ,match ,arg-name
-            (values (progn ,@body) match?)))))))
+         (handler-case
+             (destructuring-bind
+               ,match ,arg-name
+               (values (progn ,@body) match?))
+           (t () (values nil nil)))))))
 
 (defun optimize-body (body)
   (loop for exprs = body then (rest exprs)
@@ -23,7 +24,7 @@
                  for name = (pop optimizations)
                  while name
                  for (new-body match?) = (multiple-value-list (funcall name exprs))
-                 when (and match? (not (typep match? 'error)))
+                 when match?
                    do (setf exprs new-body
                             optimizations (append optimizations (list name))))
         collect (first exprs)))
