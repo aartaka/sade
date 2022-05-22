@@ -32,7 +32,8 @@
              (declarations '(declare (optimize (speed 3) (safety 0) (debug 0) (space 0) (compilation-speed 0)))))
   (let ((type `(unsigned-byte ,cell-size))
         (cell-max (1- (expt 2 cell-size)))
-        (address-max (1- (expt 2 address-size))))
+        (address-max (1- (expt 2 address-size)))
+        (body (process-commands stream)))
     `(let* ((%memory% (make-array ,(expt 2 address-size) :element-type (quote ,type) :initial-element 0))
             (%ptr% 0))
        ,declarations
@@ -47,7 +48,7 @@
                                                          (subst type '%type%
                                                                 (primitive-body primitive))))))))
          (declare (inline ,@(loop for name being the hash-key of *primitives* collect name)))
-         (progn ,@(process-commands stream))
+         (progn ,@body)
          (values %ptr% %memory%)))))
 
 (defun bf-compile (name stream)
