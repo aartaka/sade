@@ -19,8 +19,8 @@ in the directory you cloned Sade to. If you use CCL instead of (implied) SBCL, a
 You'll have the ~sade~ executable right in this directory. You can use it as
 #+begin_src sh
   ./sade h # print help
-  ./sade c assets/hello.bf ./hello # compile a Brainfuck file to an executable
-  ./sade r hello # run the compiled file (it can have a strange extension)
+  ./sade c assets/hello.bf hello # compile a Brainfuck file to an executable
+  ./hello # run the compiled file
   # => Hello, World!
 #+end_src
 

@@ -30,20 +30,27 @@
                (let ((name (gensym (string-upcase (pathname-name in)))))
                  (bf-compile-from-file name in)
                  (disassemble name))))
-            ((and (= 2 argc) (memp (first args) '("r" "run")))
-             (load (uiop:parse-native-namestring (second args))))
             ((and (<= 2 argc 3) (memp (first args) '("c" "compile")))
              (let* ((in (uiop:merge-pathnames* (uiop:parse-native-namestring (second args))
                                                (uiop:getcwd)))
-                    (out (compile-file-pathname
-                          (if (third args)
-                              (uiop:merge-pathnames* (third args) (uiop:getcwd))
-                              in))))
+                    (out (uiop:merge-pathnames*
+                          (or (uiop:parse-native-namestring (third args)) (pathname-name in))
+                          (uiop:getcwd))))
+               #+ecl
                (uiop:with-temporary-file
                    (:stream f :pathname p :type "lisp" :keep t)
                  (print (with-open-file (i in) (bf i)) f)
+                 (print '(si:quit) f)
                  :close-stream
-                 (compile-file p :output-file out))))
+                 (compile-file p :system-p t)
+                 (c:build-program
+                  out :lisp-files (list (uiop:merge-pathnames*
+                                         (concatenate 'string (pathname-name p) ".o") p))))
+               #-ecl
+               (let ((tmpname (gensym "TMP")))
+                 (bf-compile-from-file tmpname in)
+                 (setf uiop:*image-entry-point* (lambda () (funcall tmpname)))
+                 (uiop:dump-image out :executable t))))
             ((or (zerop argc) (memp args '(("h") ("-h") ("help") ("--help"))))
              (info "Sade, an extensible Brainfuck to Lisp compiler.
 
@@ -53,18 +60,15 @@ Commands~13tArgs~25tDescription
 ~2th/help~25tprint this message.
 ~2to/optimize~13tin~25tshow the optimized code for IN.
 ~2tc/compile~13tin [out]~25tcompile IN into OUT.
-~2tr/run~13tscript~25trun the compiled SCRIPT.
 ~2ti/input~25tstart an interactive BF shell.
 
 Examples:
-# compile hello.bf to hello.XXX (format situation-dependent)
+# compile hello.bf to hello
 sade c hello.bf hello
 # the same thing, yet shorter
 sade c hello.bf
-# run the previously compiled hello.XXX
-sade r hello.XXX
-# run the previously compiled hello.XXX inferring it from original file
-sade r hello.bf ~%"))
+# run the previously compiled hello
+./hello"))
             (t (info "No such command found. Try
 sade h
 
