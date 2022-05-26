@@ -4,21 +4,19 @@
 
 (defun process-commands (stream)
   (optimize-body
-   (delete nil
-           (loop for char = (read-char stream nil nil)
-                 while char
-                 collect (case char
-                           (#\+ `(plus 1))
-                           (#\- `(minus 1))
-                           (#\> `(right 1))
-                           (#\< `(left 1))
-                           (#\, `(readc))
-                           (#\. `(printc))
-                           (#\] (return commands))
-                           (#\[ `(lop ,@(process-commands stream)))
-                           (otherwise nil))
-                   into commands
-                 finally (return commands)))))
+   (loop for char = (read-char stream nil nil)
+         for primitive = (gethash char *commands*)
+         while char
+         when primitive
+           collect (cons (primitive-name primitive)
+                         (primitive-default-args primitive))
+             into commands
+         else when (eql char #\])
+                do (return commands)
+         else when (eql char #\[)
+                collect `(lop ,@(process-commands stream))
+                  into commands
+         finally (return commands))))
 
 (defmacro lop (&body body)
   `(loop

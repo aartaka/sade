@@ -7,15 +7,30 @@
   (defvar *commands* (make-hash-table)))
 
 (defstruct primitive
+  "The type to store the information on Sade BF primitives in.
+The slots are:
+- CHAR -- the BF character corresponding to the primitive.
+- NAME -- the Lisp symbol denoting this primitive.
+- ARGS -- the arglist of this primitive.
+- DEFAULT-ARGS -- the default args to be passed to the parsed primitive.
+- BODY -- the actual code to run in the primitive. Can contain magic symbols:
+  - %TYPE% -- the current type of the BF values.
+    Is replaced by the actual type when compiling Lisp code.
+  - %DECLARATIONS% -- current optimizations settings and other declarations.
+    Is replaced by the actual declarations when compiling Lisp code.
+  - %MEMORY% -- the memory tape.
+  - %PTR% -- the current position on the memory tape."
   (char nil :type (or null character))
   (name nil :type (or symbol list))
   (args '() :type list)
+  (default-args '() :type list)
   (body '() :type list))
 
-(defmacro defprimitive ((name &optional char) (&rest args) &body body)
+(defmacro defprimitive ((name &optional char default-args) (&rest args) &body body)
   `(let ((primitive (make-primitive :char ,char
                                     :name (quote ,name)
                                     :args (quote ,args)
+                                    :default-args (quote ,default-args)
                                     :body (quote ,body))))
      (setf (gethash (quote ,name) *primitives*) primitive)
      ,(when char
@@ -42,23 +57,23 @@
   %declarations%
   (setf (getc) (the %type% value)))
 
-(defprimitive (plus #\+) (amount)
+(defprimitive (plus #\+ (1)) (amount)
   %declarations%
   (setf (getc)
         (the %type% (logand (the %type% (+ (the %type% (getc)) (the %type% amount)))
                             %cell-max%))))
 
-(defprimitive (minus #\-) (amount)
+(defprimitive (minus #\- (1)) (amount)
   %declarations%
   (setf (getc)
         (logand (the %type% (- (the %type% (getc)) (the %type% amount)))
                 %cell-max%)))
 
-(defprimitive (right #\>) (amount)
+(defprimitive (right #\> (1)) (amount)
   %declarations%
   (setf %ptr% (logand (the fixnum (+ %ptr% (the fixnum amount))) %address-max%)))
 
-(defprimitive (left #\<) (amount)
+(defprimitive (left #\< (1)) (amount)
   %declarations%
   (setf %ptr% (logand (the fixnum (- %ptr% (the fixnum amount))) %address-max%)))
 
