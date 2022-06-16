@@ -16,6 +16,8 @@ The slots are:
 - BODY -- the actual code to run in the primitive. Can contain magic symbols:
   - %TYPE% -- the current type of the BF values.
     Is replaced by the actual type when compiling Lisp code.
+  - %PTR-TYPE% -- the type of the memory pointer.
+    Is replaced by the actual type when compiling Lisp code.
   - %DECLARATIONS% -- current optimizations settings and other declarations.
     Is replaced by the actual declarations when compiling Lisp code.
   - %MEMORY% -- the memory tape.
@@ -47,11 +49,11 @@ The slots are:
 
 (defprimitive (getco) (offset)
   %declarations%
-  (the %type% (aref %memory% (+ %ptr% (the fixnum offset)))))
+  (the %type% (aref %memory% (+ %ptr% (the %ptr-type% offset)))))
 
 (defprimitive ((setf getco)) (value offset)
   %declarations%
-  (setf (aref %memory% (+ %ptr% (the fixnum offset))) (the %type% value)))
+  (setf (aref %memory% (+ %ptr% (the %ptr-type% offset))) (the %type% value)))
 
 (defprimitive (setc) (value)
   %declarations%
@@ -71,11 +73,11 @@ The slots are:
 
 (defprimitive (right #\> (1)) (amount)
   %declarations%
-  (setf %ptr% (logand (the fixnum (+ %ptr% (the fixnum amount))) %address-max%)))
+  (setf %ptr% (logand (the %ptr-type% (+ %ptr% (the %ptr-type% amount))) %address-max%)))
 
 (defprimitive (left #\< (1)) (amount)
   %declarations%
-  (setf %ptr% (logand (the fixnum (- %ptr% (the fixnum amount))) %address-max%)))
+  (setf %ptr% (logand (the %ptr-type% (- %ptr% (the %ptr-type% amount))) %address-max%)))
 
 (defprimitive (readc #\,) ()
   (setf (getc) (the %type% (char-code (read-char)))))
@@ -106,12 +108,23 @@ The slots are:
 
 (defprimitive (scan-right) (offset)
   %declarations%
-  (loop for index from %ptr% by (the fixnum offset)
+  (loop for index from (the %ptr-type% %ptr%)
+          by (the %ptr-type% offset)
         when (zerop (aref %memory% index))
-          do (return (setf %ptr% index))))
+          do (return (setf %ptr% index))
+        finally (loop for index to (the %ptr-type% (1- %ptr%))
+                        by (the %ptr-type% offset)
+                      when (zerop (aref %memory% index))
+                        do (return (setf %ptr% index)))))
 
 (defprimitive (scan-left) (offset)
   %declarations%
-  (loop for index from %ptr% downto 0 by (the fixnum offset)
+  (loop for index from (the %ptr-type% %ptr%) downto 0
+          by (the %ptr-type% offset)
         when (zerop (aref %memory% index))
-          do (return (setf %ptr% index))))
+          do (return (setf %ptr% index))
+        finally (loop for index from (the %ptr-type% %address-max%)
+                        downto (the %ptr-type% (1+ %ptr%))
+                          by (the %ptr-type% offset)
+                      when (zerop (aref %memory% index))
+                        do (return (setf %ptr% index)))))
