@@ -49,11 +49,11 @@ The slots are:
 
 (defprimitive (getco) (offset)
   %declarations%
-  (the %type% (aref %memory% (+ %ptr% (the %ptr-type% offset)))))
+  (the %type% (aref %memory% (+ %ptr% (the %offset-type% offset)))))
 
 (defprimitive ((setf getco)) (value offset)
   %declarations%
-  (setf (aref %memory% (+ %ptr% (the %ptr-type% offset))) (the %type% value)))
+  (setf (aref %memory% (+ %ptr% (the %offset-type% offset))) (the %type% value)))
 
 (defprimitive (setc) (value)
   %declarations%
@@ -109,22 +109,22 @@ The slots are:
 (defprimitive (scan-right) (offset)
   %declarations%
   (loop for index from (the %ptr-type% %ptr%)
-          by (the %ptr-type% offset)
+          by (the %offset-type% offset)
         when (zerop (aref %memory% index))
           do (return (setf %ptr% index))
         finally (loop for index to (the %ptr-type% (1- %ptr%))
-                        by (the %ptr-type% offset)
+                        by (the %offset-type% offset)
                       when (zerop (aref %memory% index))
                         do (return (setf %ptr% index)))))
 
 (defprimitive (scan-left) (offset)
   %declarations%
   (loop for index from (the %ptr-type% %ptr%) downto 0
-          by (the %ptr-type% offset)
+          by (the %offset-type% offset)
         when (zerop (aref %memory% index))
           do (return (setf %ptr% index))
         finally (loop for index from (the %ptr-type% %address-max%)
                         downto (the %ptr-type% (1+ %ptr%))
-                          by (the %ptr-type% offset)
+                          by (the %offset-type% offset)
                       when (zerop (aref %memory% index))
                         do (return (setf %ptr% index)))))
