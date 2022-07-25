@@ -28,6 +28,12 @@
            &key (address-size 15)
              (cell-size 8)
              (declarations '(declare (optimize (speed 3) (safety 0) (debug 0) (space 0) (compilation-speed 0)))))
+  "Read the Brainfuck code from STREAM and compile it with the given parameters:
+
+ADDRESS-SIZE -- the number of bits for the address storage. Default to 15.
+CELL-SIZE -- the number of bits that fit inside one memory cell. Defaults to 8.
+DECLARATIONS -- Lisp compiler declarations that allow fine-tuning the
+  relations between speed, safety, space etc."
   (let* ((type `(unsigned-byte ,cell-size))
          (cell-max (1- (expt 2 cell-size)))
          (address-max (1- (expt 2 address-size)))
@@ -54,25 +60,30 @@
          (values %ptr% %memory%)))))
 
 (defun bf-compile (name stream)
+  "Compile Brainfuck code from STREAM as a function NAME."
   (compile
    name
    `(lambda ()
       ,(bf stream))))
 
 (defun bf-compile-from-file (name file)
+  "Compile Brainfuck code from FILE as a function NAME."
   (with-open-file (stream file)
     (bf-compile name stream)))
 
 (defun bf-compile-from-string (name string)
+  "Compile Brainfuck code from STRING as a function NAME."
   (with-input-from-string (stream string)
     (bf-compile name stream)))
 
 (defun bf-eval-file (file)
+  "Run Brainfuck code from FILE."
   (let ((sym (gensym)))
     (bf-compile-from-file sym file)
     (funcall sym)))
 
 (defun bf-eval-string (string)
+  "Run Brainfuck code from STRING."
   (let ((sym (gensym)))
     (bf-compile-from-string sym string)
     (funcall sym)))
