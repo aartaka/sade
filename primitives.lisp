@@ -112,6 +112,7 @@ The slots are:
           by (the %offset-type% offset)
         when (zerop (aref %memory% index))
           do (return (setf %ptr% index))
+             ;; FIXME: SBCL deletes this somewhy.
         finally (loop for index to (the %ptr-type% (1- %ptr%))
                         by (the %offset-type% offset)
                       when (zerop (aref %memory% index))
