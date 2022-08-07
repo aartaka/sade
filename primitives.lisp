@@ -18,6 +18,8 @@ The slots are:
     Is replaced by the actual type when compiling Lisp code.
   - %PTR-TYPE% -- the type of the memory pointer.
     Is replaced by the actual type when compiling Lisp code.
+  - %OFFSET-TYPE% -- the type for offsets from the pointer.
+    Is replaced by the actual type when compiling Lisp code.
   - %DECLARATIONS% -- current optimizations settings and other declarations.
     Is replaced by the actual declarations when compiling Lisp code.
   - %MEMORY% -- the memory tape.
