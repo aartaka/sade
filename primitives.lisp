@@ -30,16 +30,18 @@ The slots are:
   (default-args '() :type list)
   (body '() :type list))
 
-(defmacro defprimitive ((name &optional char default-args) (&rest args) &body body)
-  `(let ((primitive (make-primitive :char ,char
-                                    :name (quote ,name)
-                                    :args (quote ,args)
-                                    :default-args (quote ,default-args)
-                                    :body (quote ,body))))
-     (setf (gethash (quote ,name) *primitives*) primitive)
-     ,(when char
-        `(setf (gethash ,char *commands*) primitive))
-     primitive))
+(defmacro defprimitive (name-and-args (&rest args) &body body)
+  (destructuring-bind (name &optional char default-args)
+      (uiop:ensure-list name-and-args)
+    `(let ((primitive (make-primitive :char ,char
+                                      :name (quote ,name)
+                                      :args (quote ,args)
+                                      :default-args (quote ,default-args)
+                                      :body (quote ,body))))
+       (setf (gethash (quote ,name) *primitives*) primitive)
+       ,(when char
+          `(setf (gethash ,char *commands*) primitive))
+       primitive)))
 
 (defprimitive (getc) ()
   %declarations%
