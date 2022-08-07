@@ -123,6 +123,40 @@
                           '(lop right))))
   `((scan-right ,x) ,@forms))
 
+(defoptimization copy-many
+    ((lop &rest lop-forms)
+     &rest forms
+     &aux (match? (and (eq lop 'lop)
+                       (every (lambda (form) (member (first form) '(right left plus minus)))
+                              lop-forms)
+                       (= (count 'left lop-forms :key #'first)
+                          (count 'right lop-forms :key #'first))
+                       (loop with offset = 0
+                             with initial-step
+                             with multiplier = nil
+                             for form in lop-forms
+                             for head = (first form)
+                             for arg = (second form)
+                             when (eq head 'right)
+                               do (incf offset arg)
+                             when (eq head 'left)
+                               do (decf offset arg)
+                             when (eq head 'plus)
+                               do (setf multiplier arg)
+                             when (eq head 'minus)
+                               do (setf multiplier (- arg))
+                             when (and (member head '(plus minus))
+                                       (zerop offset))
+                               do (setf initial-step arg)
+                             when (and (member head '(plus minus))
+                                       (not (zerop offset)))
+                               collect offset into args
+                               and collect multiplier into args
+                             finally (return (loop for (offset multiplier) on args by #'cddr
+                                                   collect offset
+                                                   collect (/ multiplier initial-step)))))))
+  `((copy-many ,@match?) ,@forms))
+
 ;; TODO:
 ;; - Substraction optimizations, for e.g. [<->-]
 ;; - Shift loops, like [[<+>-]>]

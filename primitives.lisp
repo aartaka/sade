@@ -133,3 +133,13 @@ The slots are:
                           by (the %offset-type% offset)
                       when (zerop (aref %memory% index))
                         do (return (setf %ptr% index)))))
+
+(defprimitive (copy-many) (&rest indices-and-multipliers)
+  %declarations%
+  (loop with initial = (getc)
+        for (offset multiplier) on indices-and-multipliers by #'cddr
+        ;; FIXME: Refactor these two? Re-setting the cell is wasteful...
+        do (setc (the %type% initial))
+           ;; FIXME: The multiplier might end up being a
+           ;; float/rational. How do we process it then? New type?
+        do (mult (the %offset-type% offset) (the %type% multiplier))))
