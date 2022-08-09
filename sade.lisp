@@ -59,31 +59,31 @@ DECLARATIONS -- Lisp compiler declarations that allow fine-tuning the
          (progn ,@body)
          (values %ptr% %memory%)))))
 
-(defun bf-compile (name stream)
+(defun bf-compile (name stream &rest args &key &allow-other-keys)
   "Compile Brainfuck code from STREAM as a function NAME."
   (compile
    name
    `(lambda ()
-      ,(bf stream))))
+      ,(bf stream ,@args))))
 
-(defun bf-compile-from-file (name file)
+(defun bf-compile-from-file (name file &rest args &key &allow-other-keys)
   "Compile Brainfuck code from FILE as a function NAME."
   (with-open-file (stream file)
-    (bf-compile name stream)))
+    (apply #'bf-compile name stream args)))
 
-(defun bf-compile-from-string (name string)
+(defun bf-compile-from-string (name string &rest args &key &allow-other-keys)
   "Compile Brainfuck code from STRING as a function NAME."
   (with-input-from-string (stream string)
-    (bf-compile name stream)))
+    (apply #'bf-compile name stream args)))
 
-(defun bf-eval-file (file)
+(defun bf-eval-file (file &rest args &key &allow-other-keys)
   "Run Brainfuck code from FILE."
   (let ((sym (gensym)))
-    (bf-compile-from-file sym file)
+    (apply #'bf-compile-from-file sym file args)
     (funcall sym)))
 
-(defun bf-eval-string (string)
+(defun bf-eval-string (string &rest args &key &allow-other-keys)
   "Run Brainfuck code from STRING."
   (let ((sym (gensym)))
-    (bf-compile-from-string sym string)
+    (apply #'bf-compile-from-string sym string args)
     (funcall sym)))
