@@ -1,6 +1,6 @@
 #+TITLE:Sade -- Infinitely Optimizable Brainfuck-to-Lisp Compiler
 
-This project follows the suit of [[https://github.com/phantomics/april][April, APL-to-Lisp compiler]], in compiling a non-Lisp language to Lisp with the goal of getting more interactive of a development workflow, better error inspection and possibly faster code (yet to be optimized and benchmarked). Be not afraid of "Lisp" in the title -- it's all compilable to an executable binary, so that you don't have to worry about the Lisp compiler after you compiled it. 
+Sade ([sad], as in Marquis de Sade) follows the suit of [[https://github.com/phantomics/april][April, APL-to-Lisp compiler]], in compiling a non-Lisp language to Lisp with the goal of getting more interactive of a development workflow, better error inspection and possibly faster code (yet to be optimized and benchmarked). Be not afraid of "Lisp" in the title -- it's all compilable to an executable binary, so that you don't have to worry about the Lisp compiler after you compiled it. 
 
 What it is not:
 - It's not the fastest Brainfuck compiler, but it can be. If you have an idea for an optimization, contribute a code snippet with your primitive and optimization in primitives.lisp and optimizations.lisp. The pattern is pretty simple. I can help you with the Lisp primitive side, if you don't feel confident enough in Lisp writing -- just open a PR with the optimization pattern and be clear about what you want to express :)
