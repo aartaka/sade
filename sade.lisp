@@ -64,7 +64,7 @@ DECLARATIONS -- Lisp compiler declarations that allow fine-tuning the
   (compile
    name
    `(lambda ()
-      ,(bf stream ,@args))))
+      ,(apply #'bf stream args))))
 
 (defun bf-compile-from-file (name file &rest args &key &allow-other-keys)
   "Compile Brainfuck code from FILE as a function NAME."
