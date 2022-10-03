@@ -53,11 +53,12 @@ The slots are:
 
 (defprimitive (getco) (offset)
   %declarations%
-  (the %type% (aref %memory% (+ %ptr% (the %offset-type% offset)))))
+  (the %type% (aref %memory% (logand (+ %ptr% (the %offset-type% offset)) %address-max%))))
 
 (defprimitive ((setf getco)) (value offset)
   %declarations%
-  (setf (aref %memory% (+ %ptr% (the %offset-type% offset))) (the %type% value)))
+  (setf (aref %memory% (logand (+ %ptr% (the %offset-type% offset)) %address-max%))
+        (the %type% value)))
 
 (defprimitive (setc) (value)
   %declarations%
@@ -66,22 +67,22 @@ The slots are:
 (defprimitive (plus #\+ (1)) (amount)
   %declarations%
   (setf (getc)
-        (the %type% (logand (the %type% (+ (the %type% (getc)) (the %type% amount)))
+        (the %type% (logand (+ (the %type% (getc)) (the %type% amount))
                             %cell-max%))))
 
 (defprimitive (minus #\- (1)) (amount)
   %declarations%
   (setf (getc)
-        (logand (the %type% (- (the %type% (getc)) (the %type% amount)))
+        (logand (- (the %type% (getc)) (the %type% amount))
                 %cell-max%)))
 
 (defprimitive (right #\> (1)) (amount)
   %declarations%
-  (setf %ptr% (logand (the %ptr-type% (+ %ptr% (the %ptr-type% amount))) %address-max%)))
+  (setf %ptr% (logand (+ %ptr% (the %ptr-type% amount)) %address-max%)))
 
 (defprimitive (left #\< (1)) (amount)
   %declarations%
-  (setf %ptr% (logand (the %ptr-type% (- %ptr% (the %ptr-type% amount))) %address-max%)))
+  (setf %ptr% (logand (- %ptr% (the %ptr-type% amount)) %address-max%)))
 
 (defprimitive (readc #\,) ()
   (setf (getc) (the %type% (char-code (read-char *standard-input* nil #\Null)))))
