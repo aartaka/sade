@@ -92,15 +92,15 @@ The slots are:
 
 (defprimitive (copy) (offset)
   %declarations%
-  (setf (getco offset) (logand (the %type% (+ (the %type% (getco offset))
-                                              (the %type% (getc))))
+  (setf (getco offset) (logand (+ (the %type% (getco offset))
+                                  (the %type% (getc)))
                                %cell-max%)
         (getc) 0))
 
 (defprimitive (mult) (offset multiplier)
   %declarations%
-  (setf (getco offset) (logand (the %type% (+ (the %type% (getco offset))
-                                              (the %type% (* (the %type% (getc)) (the %type% multiplier)))))
+  (setf (getco offset) (logand (+ (the %type% (getco offset))
+                                  (* (the %type% (getc)) (the %type% multiplier)))
                                %cell-max%)
         (getc) 0))
 
