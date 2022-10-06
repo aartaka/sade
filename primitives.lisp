@@ -88,7 +88,8 @@ The slots are:
   (setf (getc) (the %type% (char-code (read-char *standard-input* nil #\Null)))))
 
 (defprimitive (printc #\.) ()
-  (princ (code-char (the %type% (getc)))))
+  (princ (code-char (the %type% (getc))))
+  (force-output))
 
 (defprimitive (copy) (offset)
   %declarations%
