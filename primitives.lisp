@@ -114,8 +114,8 @@ The slots are:
 
 (defprimitive (scan-right) (offset)
   %declarations%
-  (loop for index from (the %ptr-type% %ptr%)
-          by (the %offset-type% offset)
+  (loop for index from (the %ptr-type% %ptr%) upto %address-max%
+            by (the %offset-type% offset)
         when (zerop (aref %memory% index))
           do (return (setf %ptr% index))
              ;; FIXME: SBCL deletes this somewhy.
