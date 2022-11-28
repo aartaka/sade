@@ -85,7 +85,8 @@ The slots are:
   (setf %ptr% (logand (- %ptr% (the %ptr-type% amount)) %address-max%)))
 
 (defprimitive (readc #\,) ()
-  (setf (getc) (the %type% (char-code (read-char *standard-input* nil #\Null)))))
+  (setf (getc) (the %type% (min (char-code (read-char *standard-input* nil #\Null))
+                                %cell-max%))))
 
 (defprimitive (printc #\.) ()
   (princ (code-char (the %type% (getc))))
