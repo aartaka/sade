@@ -91,8 +91,7 @@ The slots are:
                (if (and (eq #\Return char)
                         (eq #\Newline (peek-char nil *standard-input* nil #\Null)))
                    (char-code (read-char *standard-input* nil #\Null))
-                   (min (char-code (read-char *standard-input* nil #\Null))
-                        %cell-max%))))))
+                   (min (char-code char) %cell-max%))))))
 
 (defprimitive (printc #\.) ()
   (princ (code-char (the %type% (getc))))
