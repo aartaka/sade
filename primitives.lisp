@@ -95,7 +95,7 @@ The slots are:
 
 (defprimitive (printc #\.) ()
   (princ (code-char (the %type% (getc))))
-  (force-output))
+  (finish-output))
 
 (defprimitive (copy) (offset)
   %declarations%
